@@ -1,0 +1,23 @@
+{
+  "name": "smart-contract",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "babel-polyfill": "^6.23.0",
+    "babel-register": "^6.26.0",
+    "dotenv": "^4.0.0",
+    "eth-gas-reporter": "^0.1.10",
+    "openzeppelin-solidity": "^2.0.0",
+    "truffle": "^5.0.0",
+    "web3": "github:ethereum/web3.js"
+  },
+  "devDependencies": {
+    "solidity-coverage": "^0.5.5"
+  }
+}

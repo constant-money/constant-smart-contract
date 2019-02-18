@@ -1,0 +1,1294 @@
+{
+  "contractName": "Governance",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "offchain",
+          "type": "bytes32"
+        }
+      ],
+      "name": "__setParam",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "offchain",
+          "type": "bytes32"
+        }
+      ],
+      "name": "__setData",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "key",
+          "type": "bytes32"
+        },
+        {
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "name": "offchain",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setParam",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "key",
+          "type": "bytes32"
+        }
+      ],
+      "name": "getParam",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052336000806101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff1602179055506101ef806100536000396000f30060806040526004361061004c576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680633f45604914610051578063efc1a9bf1461009a575b600080fd5b34801561005d57600080fd5b5061009860048036038101908080356000191690602001909291908035906020019092919080356000191690602001909291905050506100df565b005b3480156100a657600080fd5b506100c9600480360381019080803560001916906020019092919050505061019e565b6040518082815260200191505060405180910390f35b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561013a57600080fd5b81600160008560001916600019168152602001908152602001600020819055507fd8c93d5a42b0a27bfe94ef709b72f028096aeeba7636dc85e61ae1a4f894608f8160405180826000191660001916815260200191505060405180910390a1505050565b60006001600083600019166000191681526020019081526020016000205490509190505600a165627a7a72305820f67818f4afc5723d86365887bd127dcf74f57799cf4360ec924060136de73b490029",
+  "deployedBytecode": "0x60806040526004361061004c576000357c0100000000000000000000000000000000000000000000000000000000900463ffffffff1680633f45604914610051578063efc1a9bf1461009a575b600080fd5b34801561005d57600080fd5b5061009860048036038101908080356000191690602001909291908035906020019092919080356000191690602001909291905050506100df565b005b3480156100a657600080fd5b506100c9600480360381019080803560001916906020019092919050505061019e565b6040518082815260200191505060405180910390f35b6000809054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff1614151561013a57600080fd5b81600160008560001916600019168152602001908152602001600020819055507fd8c93d5a42b0a27bfe94ef709b72f028096aeeba7636dc85e61ae1a4f894608f8160405180826000191660001916815260200191505060405180910390a1505050565b60006001600083600019166000191681526020019081526020016000205490509190505600a165627a7a72305820f67818f4afc5723d86365887bd127dcf74f57799cf4360ec924060136de73b490029",
+  "sourceMap": "49:805:3:-;;;133:10:0;125:5;;:18;;;;;;;;;;;;;;;;;;49:805:3;;;;;;",
+  "deployedSourceMap": "49:805:3:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;382:271;;8:9:-1;5:2;;;30:1;27;20:12;5:2;382:271:3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;749:103;;8:9:-1;5:2;;;30:1;27;20:12;5:2;749:103:3;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;382:271;225:5:0;;;;;;;;;;;211:19;;:10;:19;;;203:28;;;;;;;;594:5:3;581;:10;587:3;581:10;;;;;;;;;;;;;;;;;:18;;;;622:20;633:8;622:20;;;;;;;;;;;;;;;;;;;;;;;;382:271;;;:::o;749:103::-;801:4;831:5;:10;837:3;831:10;;;;;;;;;;;;;;;;;;824:17;;749:103;;;:::o",
+  "source": "pragma solidity ^0.4.24;\n\nimport './Admin.sol';\n\ncontract Governance is Admin { \n\n        // network parameters such as ratio, threshold, interest\n        mapping(bytes32 => uint) internal param;        \n\n        event __setParam(bytes32 offchain);\n        event __setData(bytes32 offchain);\n\n\n        /**\n         * @dev Setter function to update a param value\n         */\n        function setParam(\n                bytes32 key, \n                uint value, \n                bytes32 offchain\n        ) \n                public \n                onlyAdmin \n        {\n                param[key] = value;\n                emit __setParam(offchain);\n        }\n\n        \n        /**\n         * @dev Getter function to get a param value\n         */\n        function getParam(bytes32 key) public view returns (uint){\n                return param[key];\n        }\n}\n",
+  "sourcePath": "/Users/d/code/constant-mvp/smart-contract/contracts/Governance.sol",
+  "ast": {
+    "absolutePath": "/Users/d/code/constant-mvp/smart-contract/contracts/Governance.sol",
+    "exportedSymbols": {
+      "Governance": [
+        450
+      ]
+    },
+    "id": 451,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 400,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".24"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:3"
+      },
+      {
+        "absolutePath": "/Users/d/code/constant-mvp/smart-contract/contracts/Admin.sol",
+        "file": "./Admin.sol",
+        "id": 401,
+        "nodeType": "ImportDirective",
+        "scope": 451,
+        "sourceUnit": 25,
+        "src": "26:21:3",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 402,
+              "name": "Admin",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 24,
+              "src": "72:5:3",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Admin_$24",
+                "typeString": "contract Admin"
+              }
+            },
+            "id": 403,
+            "nodeType": "InheritanceSpecifier",
+            "src": "72:5:3"
+          }
+        ],
+        "contractDependencies": [
+          24
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 450,
+        "linearizedBaseContracts": [
+          450,
+          24
+        ],
+        "name": "Governance",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 407,
+            "name": "param",
+            "nodeType": "VariableDeclaration",
+            "scope": 450,
+            "src": "155:39:3",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+              "typeString": "mapping(bytes32 => uint256)"
+            },
+            "typeName": {
+              "id": 406,
+              "keyType": {
+                "id": 404,
+                "name": "bytes32",
+                "nodeType": "ElementaryTypeName",
+                "src": "163:7:3",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes32",
+                  "typeString": "bytes32"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "155:24:3",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+                "typeString": "mapping(bytes32 => uint256)"
+              },
+              "valueType": {
+                "id": 405,
+                "name": "uint",
+                "nodeType": "ElementaryTypeName",
+                "src": "174:4:3",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              }
+            },
+            "value": null,
+            "visibility": "internal"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 411,
+            "name": "__setParam",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 410,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 409,
+                  "indexed": false,
+                  "name": "offchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 411,
+                  "src": "230:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 408,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "230:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "229:18:3"
+            },
+            "src": "213:35:3"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 415,
+            "name": "__setData",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 414,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 413,
+                  "indexed": false,
+                  "name": "offchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 415,
+                  "src": "273:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 412,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "273:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "272:18:3"
+            },
+            "src": "257:34:3"
+          },
+          {
+            "body": {
+              "id": 436,
+              "nodeType": "Block",
+              "src": "563:90:3",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 430,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "baseExpression": {
+                        "argumentTypes": null,
+                        "id": 426,
+                        "name": "param",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 407,
+                        "src": "581:5:3",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+                          "typeString": "mapping(bytes32 => uint256)"
+                        }
+                      },
+                      "id": 428,
+                      "indexExpression": {
+                        "argumentTypes": null,
+                        "id": 427,
+                        "name": "key",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 417,
+                        "src": "587:3:3",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "581:10:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 429,
+                      "name": "value",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 419,
+                      "src": "594:5:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "581:18:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 431,
+                  "nodeType": "ExpressionStatement",
+                  "src": "581:18:3"
+                },
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 433,
+                        "name": "offchain",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 421,
+                        "src": "633:8:3",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      ],
+                      "id": 432,
+                      "name": "__setParam",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 411,
+                      "src": "622:10:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_bytes32_$returns$__$",
+                        "typeString": "function (bytes32)"
+                      }
+                    },
+                    "id": 434,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "622:20:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 435,
+                  "nodeType": "EmitStatement",
+                  "src": "617:25:3"
+                }
+              ]
+            },
+            "documentation": "@dev Setter function to update a param value",
+            "id": 437,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 424,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 423,
+                  "name": "onlyAdmin",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 23,
+                  "src": "544:9:3",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "544:9:3"
+              }
+            ],
+            "name": "setParam",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 422,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 417,
+                  "name": "key",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 437,
+                  "src": "417:11:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 416,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "417:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 419,
+                  "name": "value",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 437,
+                  "src": "447:10:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 418,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "447:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 421,
+                  "name": "offchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 437,
+                  "src": "476:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 420,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "476:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "399:103:3"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 425,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "563:0:3"
+            },
+            "scope": 450,
+            "src": "382:271:3",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 448,
+              "nodeType": "Block",
+              "src": "806:46:3",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "baseExpression": {
+                      "argumentTypes": null,
+                      "id": 444,
+                      "name": "param",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 407,
+                      "src": "831:5:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+                        "typeString": "mapping(bytes32 => uint256)"
+                      }
+                    },
+                    "id": 446,
+                    "indexExpression": {
+                      "argumentTypes": null,
+                      "id": 445,
+                      "name": "key",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 439,
+                      "src": "837:3:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "831:10:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 443,
+                  "id": 447,
+                  "nodeType": "Return",
+                  "src": "824:17:3"
+                }
+              ]
+            },
+            "documentation": "@dev Getter function to get a param value",
+            "id": 449,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getParam",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 440,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 439,
+                  "name": "key",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 449,
+                  "src": "767:11:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 438,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "767:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "766:13:3"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 443,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 442,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 449,
+                  "src": "801:4:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 441,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "801:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "800:6:3"
+            },
+            "scope": 450,
+            "src": "749:103:3",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 451,
+        "src": "49:805:3"
+      }
+    ],
+    "src": "0:855:3"
+  },
+  "legacyAST": {
+    "absolutePath": "/Users/d/code/constant-mvp/smart-contract/contracts/Governance.sol",
+    "exportedSymbols": {
+      "Governance": [
+        450
+      ]
+    },
+    "id": 451,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 400,
+        "literals": [
+          "solidity",
+          "^",
+          "0.4",
+          ".24"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:24:3"
+      },
+      {
+        "absolutePath": "/Users/d/code/constant-mvp/smart-contract/contracts/Admin.sol",
+        "file": "./Admin.sol",
+        "id": 401,
+        "nodeType": "ImportDirective",
+        "scope": 451,
+        "sourceUnit": 25,
+        "src": "26:21:3",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "baseContracts": [
+          {
+            "arguments": null,
+            "baseName": {
+              "contractScope": null,
+              "id": 402,
+              "name": "Admin",
+              "nodeType": "UserDefinedTypeName",
+              "referencedDeclaration": 24,
+              "src": "72:5:3",
+              "typeDescriptions": {
+                "typeIdentifier": "t_contract$_Admin_$24",
+                "typeString": "contract Admin"
+              }
+            },
+            "id": 403,
+            "nodeType": "InheritanceSpecifier",
+            "src": "72:5:3"
+          }
+        ],
+        "contractDependencies": [
+          24
+        ],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 450,
+        "linearizedBaseContracts": [
+          450,
+          24
+        ],
+        "name": "Governance",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "id": 407,
+            "name": "param",
+            "nodeType": "VariableDeclaration",
+            "scope": 450,
+            "src": "155:39:3",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+              "typeString": "mapping(bytes32 => uint256)"
+            },
+            "typeName": {
+              "id": 406,
+              "keyType": {
+                "id": 404,
+                "name": "bytes32",
+                "nodeType": "ElementaryTypeName",
+                "src": "163:7:3",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_bytes32",
+                  "typeString": "bytes32"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "155:24:3",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+                "typeString": "mapping(bytes32 => uint256)"
+              },
+              "valueType": {
+                "id": 405,
+                "name": "uint",
+                "nodeType": "ElementaryTypeName",
+                "src": "174:4:3",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              }
+            },
+            "value": null,
+            "visibility": "internal"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 411,
+            "name": "__setParam",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 410,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 409,
+                  "indexed": false,
+                  "name": "offchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 411,
+                  "src": "230:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 408,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "230:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "229:18:3"
+            },
+            "src": "213:35:3"
+          },
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 415,
+            "name": "__setData",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 414,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 413,
+                  "indexed": false,
+                  "name": "offchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 415,
+                  "src": "273:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 412,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "273:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "272:18:3"
+            },
+            "src": "257:34:3"
+          },
+          {
+            "body": {
+              "id": 436,
+              "nodeType": "Block",
+              "src": "563:90:3",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "id": 430,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "leftHandSide": {
+                      "argumentTypes": null,
+                      "baseExpression": {
+                        "argumentTypes": null,
+                        "id": 426,
+                        "name": "param",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 407,
+                        "src": "581:5:3",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+                          "typeString": "mapping(bytes32 => uint256)"
+                        }
+                      },
+                      "id": 428,
+                      "indexExpression": {
+                        "argumentTypes": null,
+                        "id": 427,
+                        "name": "key",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 417,
+                        "src": "587:3:3",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      },
+                      "isConstant": false,
+                      "isLValue": true,
+                      "isPure": false,
+                      "lValueRequested": true,
+                      "nodeType": "IndexAccess",
+                      "src": "581:10:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "nodeType": "Assignment",
+                    "operator": "=",
+                    "rightHandSide": {
+                      "argumentTypes": null,
+                      "id": 429,
+                      "name": "value",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 419,
+                      "src": "594:5:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_uint256",
+                        "typeString": "uint256"
+                      }
+                    },
+                    "src": "581:18:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "id": 431,
+                  "nodeType": "ExpressionStatement",
+                  "src": "581:18:3"
+                },
+                {
+                  "eventCall": {
+                    "argumentTypes": null,
+                    "arguments": [
+                      {
+                        "argumentTypes": null,
+                        "id": 433,
+                        "name": "offchain",
+                        "nodeType": "Identifier",
+                        "overloadedDeclarations": [],
+                        "referencedDeclaration": 421,
+                        "src": "633:8:3",
+                        "typeDescriptions": {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      }
+                    ],
+                    "expression": {
+                      "argumentTypes": [
+                        {
+                          "typeIdentifier": "t_bytes32",
+                          "typeString": "bytes32"
+                        }
+                      ],
+                      "id": 432,
+                      "name": "__setParam",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 411,
+                      "src": "622:10:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_function_event_nonpayable$_t_bytes32_$returns$__$",
+                        "typeString": "function (bytes32)"
+                      }
+                    },
+                    "id": 434,
+                    "isConstant": false,
+                    "isLValue": false,
+                    "isPure": false,
+                    "kind": "functionCall",
+                    "lValueRequested": false,
+                    "names": [],
+                    "nodeType": "FunctionCall",
+                    "src": "622:20:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_tuple$__$",
+                      "typeString": "tuple()"
+                    }
+                  },
+                  "id": 435,
+                  "nodeType": "EmitStatement",
+                  "src": "617:25:3"
+                }
+              ]
+            },
+            "documentation": "@dev Setter function to update a param value",
+            "id": 437,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": false,
+            "modifiers": [
+              {
+                "arguments": null,
+                "id": 424,
+                "modifierName": {
+                  "argumentTypes": null,
+                  "id": 423,
+                  "name": "onlyAdmin",
+                  "nodeType": "Identifier",
+                  "overloadedDeclarations": [],
+                  "referencedDeclaration": 23,
+                  "src": "544:9:3",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_modifier$__$",
+                    "typeString": "modifier ()"
+                  }
+                },
+                "nodeType": "ModifierInvocation",
+                "src": "544:9:3"
+              }
+            ],
+            "name": "setParam",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 422,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 417,
+                  "name": "key",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 437,
+                  "src": "417:11:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 416,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "417:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 419,
+                  "name": "value",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 437,
+                  "src": "447:10:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 418,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "447:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                },
+                {
+                  "constant": false,
+                  "id": 421,
+                  "name": "offchain",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 437,
+                  "src": "476:16:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 420,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "476:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "399:103:3"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 425,
+              "nodeType": "ParameterList",
+              "parameters": [],
+              "src": "563:0:3"
+            },
+            "scope": 450,
+            "src": "382:271:3",
+            "stateMutability": "nonpayable",
+            "superFunction": null,
+            "visibility": "public"
+          },
+          {
+            "body": {
+              "id": 448,
+              "nodeType": "Block",
+              "src": "806:46:3",
+              "statements": [
+                {
+                  "expression": {
+                    "argumentTypes": null,
+                    "baseExpression": {
+                      "argumentTypes": null,
+                      "id": 444,
+                      "name": "param",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 407,
+                      "src": "831:5:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_mapping$_t_bytes32_$_t_uint256_$",
+                        "typeString": "mapping(bytes32 => uint256)"
+                      }
+                    },
+                    "id": 446,
+                    "indexExpression": {
+                      "argumentTypes": null,
+                      "id": 445,
+                      "name": "key",
+                      "nodeType": "Identifier",
+                      "overloadedDeclarations": [],
+                      "referencedDeclaration": 439,
+                      "src": "837:3:3",
+                      "typeDescriptions": {
+                        "typeIdentifier": "t_bytes32",
+                        "typeString": "bytes32"
+                      }
+                    },
+                    "isConstant": false,
+                    "isLValue": true,
+                    "isPure": false,
+                    "lValueRequested": false,
+                    "nodeType": "IndexAccess",
+                    "src": "831:10:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "functionReturnParameters": 443,
+                  "id": 447,
+                  "nodeType": "Return",
+                  "src": "824:17:3"
+                }
+              ]
+            },
+            "documentation": "@dev Getter function to get a param value",
+            "id": 449,
+            "implemented": true,
+            "isConstructor": false,
+            "isDeclaredConst": true,
+            "modifiers": [],
+            "name": "getParam",
+            "nodeType": "FunctionDefinition",
+            "parameters": {
+              "id": 440,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 439,
+                  "name": "key",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 449,
+                  "src": "767:11:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  },
+                  "typeName": {
+                    "id": 438,
+                    "name": "bytes32",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "767:7:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_bytes32",
+                      "typeString": "bytes32"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "766:13:3"
+            },
+            "payable": false,
+            "returnParameters": {
+              "id": 443,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 442,
+                  "name": "",
+                  "nodeType": "VariableDeclaration",
+                  "scope": 449,
+                  "src": "801:4:3",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 441,
+                    "name": "uint",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "801:4:3",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "800:6:3"
+            },
+            "scope": 450,
+            "src": "749:103:3",
+            "stateMutability": "view",
+            "superFunction": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 451,
+        "src": "49:805:3"
+      }
+    ],
+    "src": "0:855:3"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.4.24+commit.e67f0147.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.0.0",
+  "updatedAt": "2018-12-29T01:49:05.156Z",
+  "devdoc": {
+    "methods": {
+      "getParam(bytes32)": {
+        "details": "Getter function to get a param value"
+      },
+      "setParam(bytes32,uint256,bytes32)": {
+        "details": "Setter function to update a param value"
+      }
+    }
+  },
+  "userdoc": {
+    "methods": {}
+  }
+}
