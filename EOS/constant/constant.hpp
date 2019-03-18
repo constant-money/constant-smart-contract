@@ -27,14 +27,14 @@ public:
         
         stats statstable(code, sym.code().raw());
         auto existing = statstable.find(sym.code().raw());
-        eosio_assert(existing == statstable.end(), "token with symbol already exists");
-
-        statstable.emplace(_self, [&](auto &s) {
-            s.supply.symbol = maximum_supply.symbol;
-            s.issuer = code;
-        });
-
-        send_summary(_self, "create CONST successfully!");
+        if (existing == statstable.end()) {
+            statstable.emplace(_self, [&](auto &s) {
+                s.supply.symbol = maximum_supply.symbol;
+                s.issuer = code;
+            });
+            send_summary(_self, "create CONST successfully!");
+        
+        }
     }
 
     [[eosio::action]]
@@ -80,7 +80,7 @@ private:
         uint64_t primary_key() const { return supply.symbol.code().raw(); }
     };
 
-    typedef eosio::multi_index<"account"_n, account> accounts;
+    typedef eosio::multi_index<"accounts"_n, account> accounts;
     typedef eosio::multi_index<"stat"_n, currency_stats> stats;
 
     void sub_balance(name owner, asset value);
