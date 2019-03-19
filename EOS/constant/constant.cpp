@@ -28,14 +28,38 @@ void constant::purchase(name to, asset quantity)
 
 void constant::redeem(name from, asset quantity)
 {
+    auto sym = quantity.symbol;
+    eosio_assert(sym.is_valid(), "invalid symbol name");
+
+    stats statstable( _self, sym.code().raw() );
+    auto existing = statstable.find( sym.code().raw() );
+    eosio_assert( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
+    const auto& st = *existing;
+
+    eosio_assert(_self == st.issuer, "must owner of this contract");
+    require_auth(from);
+    require_recipient(from);
+
+    eosio_assert(quantity.is_valid(), "invalid quantity");
+    eosio_assert(quantity.amount >= 0, "must issue positive quantity or zero");
+    eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
+
+    sub_balance(from, quantity, _self);
 }
 
 void constant::transfer(name from, name to, asset quantity)
 {
 }
 
-void constant::sub_balance(name owner, asset value) {
-
+void constant::sub_balance(name owner, asset value, name ram_payer) {
+    accounts to_acnts(_self, owner.value);
+    auto to = to_acnts.find(value.symbol.code().raw());
+    eosio_assert(to != to_acnts.end(), "must hold CONST");
+    
+    to_acnts.modify(to, ram_payer, [&]( auto& a ) {
+        a.balance -= value;
+    });
+    
 }
 
 void constant::add_balance(name owner, asset value, name ram_payer)
