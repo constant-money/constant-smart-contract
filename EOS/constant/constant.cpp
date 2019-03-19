@@ -49,7 +49,6 @@ void constant::redeem(name from, asset quantity)
 
 void constant::transfer(name from, name to, asset quantity)
 {
-    require_auth(from);
     require_recipient(from);
 
     eosio_assert(from != to, "cannot transfer to self" );
