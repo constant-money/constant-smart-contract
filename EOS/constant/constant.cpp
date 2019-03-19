@@ -15,7 +15,7 @@ void constant::purchase(name to, asset quantity)
     eosio_assert( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
     const auto& st = *existing;
 
-    eosio_assert(_self == st.issuer, "must owner of this contract");
+    eosio_assert(_self == st.issuer, "must be owner of this contract");
     require_auth(to);
     require_recipient(to);
 
@@ -36,7 +36,7 @@ void constant::redeem(name from, asset quantity)
     eosio_assert( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
     const auto& st = *existing;
 
-    eosio_assert(_self == st.issuer, "must owner of this contract");
+    eosio_assert(_self == st.issuer, "must be owner of this contract");
     require_auth(from);
     require_recipient(from);
 
@@ -49,6 +49,28 @@ void constant::redeem(name from, asset quantity)
 
 void constant::transfer(name from, name to, asset quantity)
 {
+    require_auth(from);
+    require_recipient(from);
+
+    eosio_assert(from != to, "cannot transfer to self" );
+    eosio_assert(is_account(to), "to account does not exist");
+
+    auto sym = quantity.symbol;
+    eosio_assert(sym.is_valid(), "invalid symbol name");
+
+    stats statstable(_self, sym.code().raw());
+    auto existing = statstable.find( sym.code().raw() );
+    eosio_assert( existing != statstable.end(), "token with symbol does not exist, create token before issue" );
+    const auto& st = *existing;
+
+    require_recipient(to);
+    eosio_assert(_self == st.issuer, "must be owner of this contract");
+    eosio_assert(quantity.is_valid(), "invalid quantity" );
+    eosio_assert(quantity.amount > 0, "must transfer positive quantity" );
+    eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
+
+    sub_balance(from, quantity, _self);
+    add_balance(to, quantity, _self);
 }
 
 void constant::sub_balance(name owner, asset value, name ram_payer) {
