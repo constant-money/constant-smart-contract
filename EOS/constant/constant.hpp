@@ -47,7 +47,7 @@ public:
     void redeem(name from, asset quantity);
 
     [[eosio::action]]
-    void transfer(name from, name to, asset quantity);
+    void transfer(name from, name to, asset quantity, string memo);
 
     [[eosio::action]]
     void notify(name user, string msg);
@@ -83,7 +83,7 @@ private:
     typedef eosio::multi_index<"accounts"_n, account> accounts;
     typedef eosio::multi_index<"stat"_n, currency_stats> stats;
 
-    void sub_balance(name owner, asset value, name ram_payer);
+    void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
     void send_summary(name user, string message);
 };

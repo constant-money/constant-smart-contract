@@ -16,7 +16,6 @@ void constant::purchase(name to, asset quantity)
     const auto& st = *existing;
 
     eosio_assert(_self == st.issuer, "must be owner of this contract");
-    require_auth(to);
     require_recipient(to);
 
     eosio_assert(quantity.is_valid(), "invalid quantity");
@@ -37,17 +36,16 @@ void constant::redeem(name from, asset quantity)
     const auto& st = *existing;
 
     eosio_assert(_self == st.issuer, "must be owner of this contract");
-    require_auth(from);
     require_recipient(from);
 
     eosio_assert(quantity.is_valid(), "invalid quantity");
     eosio_assert(quantity.amount >= 0, "must issue positive quantity or zero");
     eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
 
-    sub_balance(from, quantity, _self);
+    sub_balance(from, quantity);
 }
 
-void constant::transfer(name from, name to, asset quantity)
+void constant::transfer(name from, name to, asset quantity, string memo)
 {
     require_recipient(from);
 
@@ -67,17 +65,18 @@ void constant::transfer(name from, name to, asset quantity)
     eosio_assert(quantity.is_valid(), "invalid quantity" );
     eosio_assert(quantity.amount > 0, "must transfer positive quantity" );
     eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch" );
+    eosio_assert(memo.size() <= 256, "memo has more than 256 bytes");
 
-    sub_balance(from, quantity, _self);
+    sub_balance(from, quantity);
     add_balance(to, quantity, _self);
 }
 
-void constant::sub_balance(name owner, asset value, name ram_payer) {
+void constant::sub_balance(name owner, asset value) {
     accounts to_acnts(_self, owner.value);
     auto to = to_acnts.find(value.symbol.code().raw());
     eosio_assert(to != to_acnts.end(), "must hold CONST");
     
-    to_acnts.modify(to, ram_payer, [&]( auto& a ) {
+    to_acnts.modify(to, owner, [&]( auto& a ) {
         a.balance -= value;
     });
     
