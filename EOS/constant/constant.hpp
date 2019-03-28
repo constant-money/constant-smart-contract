@@ -31,14 +31,9 @@ public:
             statstable.emplace(_self, [&](auto &s) {
                 s.supply.symbol = maximum_supply.symbol;
                 s.issuer = code;
-            });
-            send_summary(_self, "create CONST successfully!");
-        
+            });        
         }
     }
-
-    [[eosio::action]]
-    void version();
 
     [[eosio::action]]
     void purchase(name to, asset quantity);
@@ -85,5 +80,4 @@ private:
 
     void sub_balance(name owner, asset value);
     void add_balance(name owner, asset value, name ram_payer);
-    void send_summary(name user, string message);
 };

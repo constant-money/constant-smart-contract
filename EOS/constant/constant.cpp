@@ -1,10 +1,5 @@
 #include "constant.hpp"
 
-void constant::version()
-{
-    send_summary(_self, "constant version 1.0.0");
-}
-
 void constant::purchase(name to, asset quantity)
 {
     auto sym = quantity.symbol;
@@ -23,6 +18,10 @@ void constant::purchase(name to, asset quantity)
     eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
 
     add_balance(to, quantity, _self);
+
+    statstable.modify(st, _self, [&]( auto& s ) {
+        s.supply += quantity;
+    });
 }
 
 void constant::redeem(name from, asset quantity)
@@ -36,6 +35,8 @@ void constant::redeem(name from, asset quantity)
     const auto& st = *existing;
 
     eosio_assert(_self == st.issuer, "must be owner of this contract");
+    eosio_assert(st.supply.amount >= quantity.amount, "vault must be large than 0");
+
     require_recipient(from);
 
     eosio_assert(quantity.is_valid(), "invalid quantity");
@@ -43,6 +44,10 @@ void constant::redeem(name from, asset quantity)
     eosio_assert(quantity.symbol == st.supply.symbol, "symbol precision mismatch");
 
     sub_balance(from, quantity);
+
+    statstable.modify(st, _self, [&]( auto& s ) {
+        s.supply -= quantity;
+    });
 }
 
 void constant::transfer(name from, name to, asset quantity, string memo)
@@ -97,20 +102,4 @@ void constant::add_balance(name owner, asset value, name ram_payer)
     }
 }
 
-void constant::notify(name user, string msg) {
-    require_auth(_self);
-
-    require_auth(user);
-    require_recipient(user);
-}
-
-void constant::send_summary(name user, string message) {
-    action(
-        permission_level{get_self(),"active"_n}, // permission level
-        _self, // code
-        "notify"_n, // action
-        make_tuple(user, message) // data
-    ).send();
-}
-
-EOSIO_DISPATCH(constant, (version)(purchase)(redeem)(transfer)(notify))
+EOSIO_DISPATCH(constant, (purchase)(redeem)(transfer))
