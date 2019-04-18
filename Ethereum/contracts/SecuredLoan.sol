@@ -20,7 +20,6 @@ contract SecuredLoan {
                 LoanState state;
         }
 
-        address liquidatorAddr;
         mapping(address => bool) admin;
         Loan[] private loans;
 
@@ -29,8 +28,7 @@ contract SecuredLoan {
         event __payoff(bytes32 offchain);
         event __liquidate(bytes32 offchain);
 
-        constructor(address lAddr) public {
-                liquidatorAddr = lAddr;
+        constructor() public {
                 admin[msg.sender] = true;
         }
 
@@ -46,6 +44,15 @@ contract SecuredLoan {
         function addAdmin(address addr) public onlyAdmin {
                 require(addr != address(0x0));
                 admin[addr] = true;
+        }
+
+        /**
+        * @dev remove admin address
+        * @param addr admin address
+        */
+        function removeAdmin(address addr) public onlyAdmin {
+                require(addr != address(0x0));
+                admin[addr] = false;
         }
 
         /**
@@ -80,11 +87,11 @@ contract SecuredLoan {
                 Loan storage l = loans[lid];
 
                 require(l.state == LoanState.Open);
-                require(msg.sender == l.borrower);
+                require(msg.sender == l.borrower || admin[msg.sender]);
                 require(now >= l.end);
 
                 l.state = LoanState.Closed;
-                msg.sender.transfer(l.collateral.amount);
+                l.borrower.transfer(l.collateral.amount);
 
                 emit __payoff(offchain);
         }
@@ -94,7 +101,8 @@ contract SecuredLoan {
         * @dev function to handle automatic liquidation 
         * @param lid the loan id
         */
-        function liquidate(uint lid, bytes32 offchain) public onlyAdmin {
+        function liquidate(uint lid, address liquidatorAddr, bytes32 offchain) public onlyAdmin {
+                require(liquidatorAddr != address(0x0));
                 Loan storage l = loans[lid];
 
                 require(l.state == LoanState.Open);

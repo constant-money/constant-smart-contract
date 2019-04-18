@@ -13,8 +13,11 @@ contract("SecuredLoan", (accounts) => {
 
         const OFFCHAIN = web3.utils.fromAscii('1')
         before(async () => {
-                cs = await p2p.deployed(liquidator.address);
+                cs = await p2p.deployed();
         })
 
+        describe('init contract', () => {
+
+        })
 
 })
