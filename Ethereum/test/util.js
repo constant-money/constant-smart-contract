@@ -57,12 +57,33 @@ module.exports = {
                 return web3.eth.contract(JSON.parse(fs.readFileSync('build/contracts/' + name + '.json').toString()).abi).at(address)
         },
 
-        increaseTime: function(seconds) {
-                web3.currentProvider.send({
-                        jsonrpc: "2.0",
-                        method: "evm_increaseTime",
-                        params: [seconds], id: 0
-                })
+        increaseTime: function(duration) {
+                const id = Date.now();
+
+                return new Promise((resolve, reject) => {
+                        web3.currentProvider.send(
+                        {
+                                jsonrpc: "2.0",
+                                method: "evm_increaseTime",
+                                params: [duration],
+                                id: id
+                        },
+                        err1 => {
+                                if (err1) return reject(err1);
+
+                                web3.currentProvider.send(
+                                {
+                                        jsonrpc: "2.0",
+                                        method: "evm_mine",
+                                        id: id + 1
+                                        },
+                                        (err2, res) => {
+                                        return err2 ? reject(err2) : resolve(res);
+                                        }
+                                );
+                        }
+                        );
+                });
         },
 
         assertRevert: async function (promise) {

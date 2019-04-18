@@ -20,7 +20,7 @@ contract SecuredLoan {
                 LoanState state;
         }
 
-        mapping(address => bool) admin;
+        mapping(address => bool) public admin;
         Loan[] private loans;
 
         // events to track onchain-offchain relationships
@@ -100,6 +100,7 @@ contract SecuredLoan {
         /**
         * @dev function to handle automatic liquidation 
         * @param lid the loan id
+        * @param liquidatorAddr the liquidator address
         */
         function liquidate(uint lid, address liquidatorAddr, bytes32 offchain) public onlyAdmin {
                 require(liquidatorAddr != address(0x0));
