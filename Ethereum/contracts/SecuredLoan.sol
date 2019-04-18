@@ -20,7 +20,7 @@ contract SecuredLoan {
                 LoanState state;
         }
 
-        address liquidationAddr;
+        address liquidatorAddr;
         mapping(address => bool) admin;
         Loan[] private loans;
 
@@ -30,7 +30,7 @@ contract SecuredLoan {
         event __liquidate(bytes32 offchain);
 
         constructor(address lAddr) public {
-                liquidationAddr = lAddr;
+                liquidatorAddr = lAddr;
                 admin[msg.sender] = true;
         }
 
@@ -100,7 +100,7 @@ contract SecuredLoan {
                 require(l.state == LoanState.Open);
                 l.state = LoanState.Liquidated;
                 
-                liquidationAddr.transfer(l.collateral.amount);
+                liquidatorAddr.transfer(l.collateral.amount);
                 emit __liquidate(offchain);
         }
 
