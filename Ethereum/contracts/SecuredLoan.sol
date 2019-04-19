@@ -55,6 +55,30 @@ contract SecuredLoan {
                 admin[addr] = false;
         }
 
+
+        /**
+        * @dev function to extend a secured loan
+        * @param borrower address of borrower
+        * @param principal the amount of constant
+        * @param term of loan
+        * @param closingWindow time end of loan
+        * @param ethInterest interest based on term
+        * @param ethPrice current ether price
+        */
+        function borrowByAdmin(
+                address borrower,
+                uint principal, 
+                uint term, 
+                uint closingWindow, 
+                uint ethInterest, 
+                uint ethPrice, 
+                bytes32 offchain) 
+                public
+                payable {
+
+                _borrow(borrower, principal, term, closingWindow, ethInterest, ethPrice, offchain);
+        }
+
         /**
         * @dev function to extend a secured loan
         * @param principal the amount of constant
@@ -63,7 +87,30 @@ contract SecuredLoan {
         * @param ethInterest interest based on term
         * @param ethPrice current ether price
         */
-        function borrow(uint principal, uint term, uint closingWindow, uint ethInterest, uint ethPrice, bytes32 offchain) public payable {
+        function borrow(
+                uint principal, 
+                uint term, 
+                uint closingWindow, 
+                uint ethInterest, 
+                uint ethPrice, 
+                bytes32 offchain) 
+                public 
+                payable {
+
+                _borrow(msg.sender, principal, term, closingWindow, ethInterest, ethPrice, offchain);
+        }
+
+
+        function _borrow(
+                address borrower,
+                uint principal, 
+                uint term, 
+                uint closingWindow, 
+                uint ethInterest, 
+                uint ethPrice, 
+                bytes32 offchain) 
+                private {
+
                 Loan memory l;
                 l.principal = principal;
                 l.term = term;
@@ -71,7 +118,7 @@ contract SecuredLoan {
                 l.collateral = Asset(msg.value, ethPrice);
                 l.since = now;
                 l.end = now + closingWindow * 1 seconds;
-                l.borrower = msg.sender;
+                l.borrower = borrower;
                 l.state = LoanState.Open;
 
                 loans.push(l);
