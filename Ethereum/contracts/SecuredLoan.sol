@@ -160,4 +160,11 @@ contract SecuredLoan {
                 emit __liquidate(offchain);
         }
 
+
+        function getOpenLoan(uint lid) public onlyAdmin view returns (uint, uint, uint, address, uint ){
+                Loan storage l = loans[lid];
+                return (l.principal, l.term, l.end, l.borrower, l.collateral.amount);
+                
+        }
+
 }

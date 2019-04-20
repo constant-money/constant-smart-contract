@@ -131,7 +131,7 @@ contract("SecuredLoan", (accounts) => {
                 })
 
 
-        })
+        })        
 
         describe('payoff', () => {
 
@@ -235,4 +235,32 @@ contract("SecuredLoan", (accounts) => {
                 })
         })
 
+
+        describe('borrow by admin', () => {
+
+                it('init', async () => {
+                        const i = {
+                                principal: 1000,
+                                term: 1,
+                                closingWindow: 200,
+                                ethInterest: 360,
+                                ethPrice: 17630,
+                                borrower: borrower2,
+                                value: web3.utils.toWei('0.1', 'ether'),
+                                admin: root
+                        }
+
+                        const o = {
+                                lid: 4
+                        }
+                        const tx = await sl.borrowByAdmin(i.borrower, i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.admin, value: i.value})
+                        eq(o.lid, await oc(tx, "__borrow", "lid"))
+
+                        const loan = await sl.getOpenLoan(o.lid)
+                        eq(i.principal, loan[0].toNumber())
+                        eq(i.term, loan[1].toNumber())
+                        eq(i.borrower, loan[3])
+                })
+
+        })
 })
