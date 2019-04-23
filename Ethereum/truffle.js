@@ -1,3 +1,11 @@
+const HDWalletProvider = require("truffle-hdwallet-provider");
+const dotenv = require('dotenv')
+const result = dotenv.config()
+ 
+if (result.error) {
+  throw result.error
+}
+
 /*
  * NB: since truffle-hdwallet-provider 0.0.5 you must wrap HDWallet providers in a 
  * function when declaring them. Failure to do so will cause commands to hang. ex:
@@ -17,9 +25,35 @@ module.exports = {
   // to customize your Truffle configuration!
   networks: {
     development: {
-    host: "localhost",
-    port: 8545,
-    network_id: "*"
+      host: "localhost",
+      port: 8545,
+      network_id: "*"
+    },
+    tomotestnet: {
+      provider: () => new HDWalletProvider(
+        result.parsed.ETHEREUM_PRIVATE_KEY,
+        "https://testnet.tomochain.com",
+        0,
+        1,
+        true,
+        "m/44'/889'/0'/0/",
+      ),
+      network_id: "89",
+      gas: 2000000,
+      gasPrice: 10000000000000,
+    },
+    tomomainnet: {
+      provider: () => new HDWalletProvider(
+        result.parsed.ETHEREUM_PRIVATE_KEY,
+        "https://rpc.tomochain.com",
+        0,
+        1,
+        true,
+        "m/44'/889'/0'/0/",
+      ),
+      network_id: "88",
+      gas: 2000000,
+      gasPrice: 10000000000000,
     }
   },
   compilers: {
