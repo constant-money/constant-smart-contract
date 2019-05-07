@@ -5,7 +5,7 @@ import './ISimplePolicy.sol';
 import './IOracle.sol';
 import 'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol';
 
-// a factory contract of all secured loans on the CONSTant p2p lending platform
+// a factory contract of all secured loans on the constant p2p lending platform
 contract SecuredLoan is Admin { 
 
         struct Loan {
@@ -84,6 +84,10 @@ contract SecuredLoan is Admin {
                 l.open = true;
 
                 loans.push(l);
+
+                // TODO: discuss with team about this
+                CONST.transferFrom(lender, borrower, l.principal); 
+
                 emit __borrow(loans.length - 1, offchain); 
         }
 
