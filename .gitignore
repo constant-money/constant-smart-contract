@@ -66,3 +66,7 @@ typings/
 
 #  CMake
 build
+
+# vim
+.*~
+.*swp
