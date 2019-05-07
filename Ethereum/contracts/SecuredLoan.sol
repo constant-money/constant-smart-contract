@@ -45,19 +45,29 @@ contract SecuredLoan is Admin {
                 address lender, 
                 uint term, 
                 uint rate, 
+                bool onchain,
                 bytes32 offchain
         ) 
                 public 
                 payable 
                 onlyAdmin 
         {
-                _borrow(borrower, lender, term, rate, offchain);
+                _borrow(borrower, lender, term, rate, onchain, offchain);
         }
 
 
         // if a borrower wants to call the contract directly
-        function borrow(address lender, uint term, uint rate, bytes32 offchain) public payable {
-                _borrow(msg.sender, lender, term, rate, offchain);
+        function borrow(
+                address lender, 
+                uint term, 
+                uint rate, 
+                bool onchain,
+                bytes32 offchain
+        ) 
+                public 
+                payable 
+        {
+                _borrow(msg.sender, lender, term, rate, onchain, offchain);
         }
 
 
@@ -67,6 +77,7 @@ contract SecuredLoan is Admin {
                 address lender,
                 uint term, 
                 uint rate, 
+                bool onchain,
                 bytes32 offchain
         ) 
                 private
@@ -86,21 +97,35 @@ contract SecuredLoan is Admin {
                 loans.push(l);
 
                 // TODO: discuss with team about this
-                CONST.transferFrom(lender, borrower, l.principal); 
+                if (onchain) CONST.transferFrom(lender, borrower, l.principal); 
 
                 emit __borrow(loans.length - 1, offchain); 
         }
 
 
         // pay gas for borrower
-        function repayByAdmin(address payable repayer, uint lid, bytes32 offchain) public onlyAdmin {
-                _repay(repayer, lid, offchain);
+        function repayByAdmin(
+                address payable repayer, 
+                uint lid, 
+                bool onchain,
+                bytes32 offchain
+        )       
+                public 
+                onlyAdmin 
+        {
+                _repay(repayer, lid, onchain, offchain);
         }
 
 
         // if a borrower wants to call the contract directly
-        function repay(uint lid, bytes32 offchain) public {
-                _repay(msg.sender, lid, offchain);
+        function repay(
+                uint lid, 
+                bool onchain,
+                bytes32 offchain
+        ) 
+                public 
+        {
+                _repay(msg.sender, lid, onchain, offchain);
         }
 
 
@@ -110,7 +135,14 @@ contract SecuredLoan is Admin {
         // 3. collateral current drops (then liquidation kicks in) 
         // 
         // note that the repayer must approve the contract to spend its Const first.
-        function _repay(address payable repayer, uint lid, bytes32 offchain) private {
+        function _repay(
+                address payable repayer, 
+                uint lid, 
+                bool onchain,
+                bytes32 offchain
+        ) 
+                private 
+        {
                 Loan storage l = loans[lid];
                 require(l.open);
 
@@ -121,7 +153,7 @@ contract SecuredLoan is Admin {
 
                 require(repayer == l.borrower || now > l.end || liquidated);
 
-                CONST.transferFrom(repayer, l.lender, payment); 
+                if (onchain) CONST.transferFrom(repayer, l.lender, payment); 
                 repayer.transfer(l.collateral.amount);
 
                 l.open = false;
