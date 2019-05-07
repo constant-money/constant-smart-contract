@@ -1,15 +1,32 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5;
 
 contract Admin { 
 
-        address internal admin;
+        address private superAdmin;
+        mapping(address => bool) private admin;
 
         constructor() public {
-                admin = msg.sender;
+                superAdmin = msg.sender;
+                addAdmin(msg.sender);
         }
 
         modifier onlyAdmin() {
-                require(msg.sender == admin);
+                require(admin[msg.sender]);
                 _;
+        }
+
+        modifier onlySuperAdmin() {
+                require(msg.sender == superAdmin);
+                _;
+        }
+
+        function addAdmin(address a) public onlySuperAdmin {
+                require(a != address(0));
+                admin[a] = true;
+        }
+
+        function removeAdmin(address a) public onlySuperAdmin {
+                require(a != address(0));
+                admin[a] = false;
         }
 }

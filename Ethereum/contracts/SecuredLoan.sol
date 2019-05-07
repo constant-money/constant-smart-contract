@@ -1,179 +1,132 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5;
 
-contract SecuredLoan { 
+import './Admin.sol';
+import './ISimplePolicy.sol';
+import './IOracle.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol';
 
-        enum LoanState {Open, Closed, Liquidated}
+// a factory contract of all secured loans on the CONSTant p2p lending platform
+contract SecuredLoan is Admin { 
+
+        struct Loan {
+                address borrower;
+                address lender;
+                uint principal;
+                uint rate;
+                uint start;
+                uint end;
+                Asset collateral;
+                bool open;
+        }
 
         struct Asset {
                 uint amount;
                 uint price;
+                uint liquidation;
         }
 
-        struct Loan {
-                uint principal;
-                uint interest;
-                uint term;
-                uint since;
-                uint end;
-                Asset collateral;
-                address borrower;
-                LoanState state;
-        }
-
-        mapping(address => bool) public admin;
         Loan[] private loans;
 
-        // events to track onchain-offchain relationships
+        // interface to external contracts
+        ISimplePolicy private policy;
+        IOracle private oracle;
+        IERC20 private CONST;
+
+        // events to track onchain (ethereum) and offchain (our database)
         event __borrow(uint lid, bytes32 offchain);
-        event __payoff(bytes32 offchain);
-        event __liquidate(bytes32 offchain);
+        event __repay(bytes32 offchain);
 
-        constructor() public {
-                admin[msg.sender] = true;
-        }
+        // TODO: ask trong what is this function for?
+        function () external payable {}
 
-        modifier onlyAdmin() {
-                require(admin[msg.sender]);
-                _;
-        }
-
-
-        function () public payable {}
-
-        /**
-        * @dev add admin address for load balancing
-        * @param addr admin address
-        */
-        function addAdmin(address addr) public onlyAdmin {
-                require(addr != address(0x0));
-                admin[addr] = true;
-        }
-
-        /**
-        * @dev remove admin address
-        * @param addr admin address
-        */
-        function removeAdmin(address addr) public onlyAdmin {
-                require(addr != address(0x0));
-                admin[addr] = false;
-        }
-
-
-        /**
-        * @dev function to extend a secured loan
-        * @param borrower address of borrower
-        * @param principal the amount of constant
-        * @param term of loan
-        * @param closingWindow time end of loan
-        * @param ethInterest interest based on term
-        * @param ethPrice current ether price
-        */
+        // pay gas for borrower
         function borrowByAdmin(
-                address borrower,
-                uint principal, 
+                address borrower, 
+                address lender, 
                 uint term, 
-                uint closingWindow, 
-                uint ethInterest, 
-                uint ethPrice, 
-                bytes32 offchain) 
-                public
-                payable {
-
-                _borrow(borrower, principal, term, closingWindow, ethInterest, ethPrice, offchain);
-        }
-
-        /**
-        * @dev function to extend a secured loan
-        * @param principal the amount of constant
-        * @param term of loan
-        * @param closingWindow time end of loan
-        * @param ethInterest interest based on term
-        * @param ethPrice current ether price
-        */
-        function borrow(
-                uint principal, 
-                uint term, 
-                uint closingWindow, 
-                uint ethInterest, 
-                uint ethPrice, 
-                bytes32 offchain) 
+                uint rate, 
+                bytes32 offchain
+        ) 
                 public 
-                payable {
-
-                _borrow(msg.sender, principal, term, closingWindow, ethInterest, ethPrice, offchain);
-        }
-
-
-        function _borrow(
-                address borrower,
-                uint principal, 
-                uint term, 
-                uint closingWindow, 
-                uint ethInterest, 
-                uint ethPrice, 
-                bytes32 offchain) 
-                private {
-
-                Loan memory l;
-                l.principal = principal;
-                l.term = term;
-                l.interest = ethInterest;
-                l.collateral = Asset(msg.value, ethPrice);
-                l.since = now;
-                l.end = now + closingWindow * 1 seconds;
-                l.borrower = borrower;
-                l.state = LoanState.Open;
-
-                loans.push(l);
-                emit __borrow(loans.length - 1, offchain); // catch this event
-        }
-
-
-        /**
-        * @dev function to pay off a secured loan
-        * @param lid the loan id
-        */
-        function payoff(uint lid, bytes32 offchain) 
-                public 
-                onlyAdmin
-        {
-                Loan storage l = loans[lid];
-
-                require(l.state == LoanState.Open);
-                require(msg.sender == l.borrower || admin[msg.sender]);
-                require(now >= l.end);
-
-                l.state = LoanState.Closed;
-                l.borrower.transfer(l.collateral.amount);
-
-                emit __payoff(offchain);
-        }
-
-
-        /**
-        * @dev function to handle automatic liquidation 
-        * @param lid the loan id
-        * @param liquidatorAddr the liquidator address
-        */
-        function liquidate(uint lid, address liquidatorAddr, bytes32 offchain) 
-                public
+                payable 
                 onlyAdmin 
         {
-                require(liquidatorAddr != address(0x0));
-                Loan storage l = loans[lid];
-
-                require(l.state == LoanState.Open);
-                l.state = LoanState.Liquidated;
-                
-                liquidatorAddr.transfer(l.collateral.amount);
-                emit __liquidate(offchain);
+                _borrow(borrower, lender, term, rate, offchain);
         }
 
 
-        function getOpenLoan(uint lid) public onlyAdmin view returns (uint, uint, uint, address, uint) 
+        // if a borrower wants to call the contract directly
+        function borrow(address lender, uint term, uint rate, bytes32 offchain) public payable {
+                _borrow(msg.sender, lender, term, rate, offchain);
+        }
+
+
+        // take a secured loan with ETH as collateral
+        function _borrow(
+                address borrower,
+                address lender,
+                uint term, 
+                uint rate, 
+                bytes32 offchain
+        ) 
+                private
         {
-                Loan storage l = loans[lid];
-                return (l.principal, l.term, l.end, l.borrower, l.collateral.amount);
+                Loan memory l;
+
+                uint ethPrice = oracle.current("ethPrice");
+                l.principal = (msg.value * ethPrice * policy.current("ethLTV")) / 10000;
+                l.collateral = Asset(msg.value, ethPrice, policy.current("ethLiquidation"));
+                l.rate = rate;
+                l.start = now;
+                l.end = now + term * 1 seconds;
+                l.borrower = borrower;
+                l.lender = lender;
+                l.open = true;
+
+                loans.push(l);
+                emit __borrow(loans.length - 1, offchain); 
         }
 
+
+        // pay gas for borrower
+        function repayByAdmin(address payable repayer, uint lid, bytes32 offchain) public onlyAdmin {
+                _repay(repayer, lid, offchain);
+        }
+
+
+        // if a borrower wants to call the contract directly
+        function repay(uint lid, bytes32 offchain) public {
+                _repay(msg.sender, lid, offchain);
+        }
+
+
+        // repay a secured loan. there are 3 ways:
+        // 1. borrower repays early
+        // 2. borrower defaults (then anyone can repay and get the over-collateral)
+        // 3. collateral current drops (then liquidation kicks in) 
+        // 
+        // note that the repayer must approve the contract to spend its Const first.
+        function _repay(address payable repayer, uint lid, bytes32 offchain) private {
+                Loan storage l = loans[lid];
+                require(l.open);
+
+                // liquidate if collateral current is approaching within 10% of principle + interest
+                uint payment = l.principal * (1 + l.rate * ((now < l.end? now: l.end) - l.start));
+                uint collateralValue = oracle.current("ethPrice") * l.collateral.amount;
+                bool liquidated = 10000 * collateralValue < payment * (10000 + l.collateral.liquidation); 
+
+                require(repayer == l.borrower || now > l.end || liquidated);
+
+                CONST.transferFrom(repayer, l.lender, payment); 
+                repayer.transfer(l.collateral.amount);
+
+                l.open = false;
+                emit __repay(offchain);
+        }
+
+
+        function loan(uint lid) public view returns (uint, uint, address, uint) {
+                Loan storage l = loans[lid];
+                return (l.principal, l.end, l.borrower, l.collateral.amount);
+        }
 }

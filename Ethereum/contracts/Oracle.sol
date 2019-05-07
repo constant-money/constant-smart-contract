@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.5;
 
 import './Admin.sol';
 
@@ -11,7 +11,7 @@ contract Oracle is Admin {
         uint private frequency;
 
         // data feed
-        mapping(bytes32 => uint[]) private values; 
+        mapping(bytes32 => uint[]) private currents; 
 
         // timestamps to avoid an oracle to flood the feed
         mapping(bytes32 => mapping(address => uint)) private timestamps;
@@ -78,34 +78,34 @@ contract Oracle is Admin {
         /**
          * @dev function to feed a new piece of data
          */
-        function feed(bytes32 key, uint value, bytes32 offchain) public onlyOracle {
+        function feed(bytes32 key, uint current, bytes32 offchain) public onlyOracle {
 
                 // avoid flood attack
                 require(now > timestamps[key][msg.sender] + frequency);
                 timestamps[key][msg.sender] = now;
 
-                // insert data to the values
+                // insert data to the currents
                 bool inserted = false;
 
-                for (uint i = 0; i < values[key].length; i++) {
-                        if (value < values[key][i]) {
-                                for (uint j = i+1; j < values[key].length; j++) {
-                                        values[key][j] = values[key][j-1];
+                for (uint i = 0; i < currents[key].length; i++) {
+                        if (current < currents[key][i]) {
+                                for (uint j = i+1; j < currents[key].length; j++) {
+                                        currents[key][j] = currents[key][j-1];
                                 }
-                                values[key][i] = value;
+                                currents[key][i] = current;
                                 inserted = true;
                                 break;
                         }
                 }
 
                 if (!inserted) { 
-                        if (values[key].length == size) {
-                                for (uint k = 0; k < values[key].length-1; k++) {
-                                        values[key][k] = values[key][k+1];
+                        if (currents[key].length == size) {
+                                for (uint k = 0; k < currents[key].length-1; k++) {
+                                        currents[key][k] = currents[key][k+1];
                                 }
-                                values[key][values[key].length-1] = value;
+                                currents[key][currents[key].length-1] = current;
                         } else 
-                                values[key].push(value);
+                                currents[key].push(current);
                 }
 
                 emit __feed(offchain);
@@ -113,9 +113,9 @@ contract Oracle is Admin {
 
         
         /**
-         * @dev getter function to get a data value, median of the data feed
+         * @dev getter function to get a data current, median of the data feed
          */
-        function value(bytes32 key) public view returns (uint){
-                return values[key][values[key].length/2];
+        function current(bytes32 key) public view returns (uint){
+                return currents[key][currents[key].length/2];
         }
 }

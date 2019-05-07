@@ -15,7 +15,7 @@
     "eth-gas-reporter": "^0.1.10",
     "ethers": "^4.0.27",
     "fs": "0.0.1-security",
-    "openzeppelin-solidity": "^2.0.0",
+    "openzeppelin-solidity": "^2.2.0",
     "solc": "^0.4.24",
     "truffle": "^5.0.0",
     "truffle-hdwallet-provider": "^1.0.0-web3one.5",
