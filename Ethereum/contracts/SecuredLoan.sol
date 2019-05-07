@@ -37,6 +37,9 @@ contract SecuredLoan {
                 _;
         }
 
+
+        function () public payable {}
+
         /**
         * @dev add admin address for load balancing
         * @param addr admin address
@@ -130,7 +133,10 @@ contract SecuredLoan {
         * @dev function to pay off a secured loan
         * @param lid the loan id
         */
-        function payoff(uint lid, bytes32 offchain) public {
+        function payoff(uint lid, bytes32 offchain) 
+                public 
+                onlyAdmin
+        {
                 Loan storage l = loans[lid];
 
                 require(l.state == LoanState.Open);
@@ -149,7 +155,10 @@ contract SecuredLoan {
         * @param lid the loan id
         * @param liquidatorAddr the liquidator address
         */
-        function liquidate(uint lid, address liquidatorAddr, bytes32 offchain) public onlyAdmin {
+        function liquidate(uint lid, address liquidatorAddr, bytes32 offchain) 
+                public
+                onlyAdmin 
+        {
                 require(liquidatorAddr != address(0x0));
                 Loan storage l = loans[lid];
 
@@ -161,10 +170,10 @@ contract SecuredLoan {
         }
 
 
-        function getOpenLoan(uint lid) public onlyAdmin view returns (uint, uint, uint, address, uint ){
+        function getOpenLoan(uint lid) public onlyAdmin view returns (uint, uint, uint, address, uint) 
+        {
                 Loan storage l = loans[lid];
                 return (l.principal, l.term, l.end, l.borrower, l.collateral.amount);
-                
         }
 
 }
