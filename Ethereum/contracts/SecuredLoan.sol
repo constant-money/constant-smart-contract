@@ -31,6 +31,7 @@ contract SecuredLoan is Admin {
                 uint collateral;
                 uint rate;
                 uint term;
+                bool done;
         }
 
         Loan[] private loans;
@@ -90,6 +91,7 @@ contract SecuredLoan is Admin {
                 o.term = term;
                 o.rate = rate;
                 o.collateral = msg.value;
+                o.done = false;
                 opens.push(o);
 
                 emit __borrow(opens.length - 1, offchain); 
@@ -161,6 +163,7 @@ contract SecuredLoan is Admin {
                 l.start = now;
                 l.end = now + term * 1 seconds;
                 l.lender = lender;
+                l.done = false;
                 loans.push(l);
 
                 // transfer money
@@ -179,7 +182,9 @@ contract SecuredLoan is Admin {
                 Open storage o = opens[oid];
 
                 require(msg.sender == o.borrower);
-                // TODO: mark that we sent already
+                require(!o.done);
+
+                o.done = true;
                 msg.sender.transfer(o.collateral);
 
                 emit __cancel(oid, offchain); 
@@ -228,8 +233,10 @@ contract SecuredLoan is Admin {
                 Loan storage l = loans[lid];
                 require(!l.done);
 
+                l.done = true;
+
                 // liquidate if collateral current is approaching within 10% of principle + interest
-                uint payment = l.principal * (10000 + l.rate * ((now < l.end? now: l.end) - l.start));
+                uint payment = l.principal * (10000 + l.rate * ((now < l.end? now: l.end) - l.start)) / 100;
                 uint collateralValue = oracle.current("ethPrice") * l.collateral.amount;
                 bool liquidated = 10000 * collateralValue < payment * (10000 + l.collateral.liquidation); 
 
@@ -237,12 +244,14 @@ contract SecuredLoan is Admin {
 
                 if (onchain) CONST.transferFrom(repayer, l.lender, payment); 
 
-                uint collForRepayer = payment/oracle.current("ethPrice") * (1+policy.current("ethIncentive"));
+                if (repayer == l.borrower) {
+                        repayer.transfer(l.collateral.amount);
+                } else {
+                        uint amt = payment/oracle.current("ethPrice") * (1+policy.current("ethIncentive"));
+                        repayer.transfer(amt);
+                        l.borrower.transfer(l.collateral.amount - amt);
+                }
 
-                repayer.transfer(collForRepayer);
-                l.borrower.transfer(l.collateral.amount - collForRepayer);
-
-                l.done = true ;
                 emit __repay(offchain);
         }
 
