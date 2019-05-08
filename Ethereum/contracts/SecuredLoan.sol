@@ -16,7 +16,7 @@ contract SecuredLoan is Admin {
                 uint start;
                 uint end;
                 Asset collateral;
-                bool open;
+                bool done;
         }
 
         struct Asset {
@@ -25,7 +25,16 @@ contract SecuredLoan is Admin {
                 uint liquidation;
         }
 
+        struct Open {
+                address borrower;
+                uint amount;
+                uint collateral;
+                uint rate;
+                uint term;
+        }
+
         Loan[] private loans;
+        Open[] private opens;
 
         // interface to external contracts
         ISimplePolicy private policy;
@@ -33,7 +42,9 @@ contract SecuredLoan is Admin {
         IERC20 private CONST;
 
         // events to track onchain (ethereum) and offchain (our database)
-        event __borrow(uint lid, bytes32 offchain);
+        event __borrow(uint oid, bytes32 offchain);
+        event __cancel(uint oid, bytes32 offchain);
+        event __fill(uint lid, bytes32 offchain);
         event __repay(bytes32 offchain);
 
         // TODO: ask trong what is this function for?
@@ -42,66 +53,107 @@ contract SecuredLoan is Admin {
         // pay gas for borrower
         function borrowByAdmin(
                 address borrower, 
-                address lender, 
                 uint term, 
                 uint rate, 
-                bool onchain,
                 bytes32 offchain
         ) 
                 public 
                 payable 
                 onlyAdmin 
         {
-                _borrow(borrower, lender, term, rate, onchain, offchain);
+                _borrow(borrower, term, rate, offchain);
         }
 
 
         // if a borrower wants to call the contract directly
         function borrow(
-                address lender, 
                 uint term, 
                 uint rate, 
-                bool onchain,
                 bytes32 offchain
         ) 
                 public 
                 payable 
         {
-                _borrow(msg.sender, lender, term, rate, onchain, offchain);
+                _borrow(msg.sender, term, rate, offchain);
         }
 
 
         // take a secured loan with ETH as collateral
         function _borrow(
                 address borrower,
-                address lender,
                 uint term, 
                 uint rate, 
-                bool onchain,
                 bytes32 offchain
         ) 
                 private
         {
-                Loan memory l;
+                Open memory o;
+                o.borrower = borrower;
+                o.term = term;
+                o.rate = rate;
+                o.collateral = msg.value;
+                opens.push(o);
+
+                emit __borrow(opens.length - 1, offchain); 
+        }
+
+
+        // match an order
+        function fill(
+                uint oid,
+                address lender,
+                uint principal,
+                uint term, 
+                uint rate, 
+                bool onchain,
+                bytes32 offchain
+        )       
+                public 
+                onlyAdmin 
+        {
+                Open storage o = opens[oid];
+
+                require(principal <= o.amount);
+                require(rate <= o.rate);
+                require(term >= o.term);
 
                 uint ethPrice = oracle.current("ethPrice");
-                l.principal = (msg.value * ethPrice * policy.current("ethLTV")) / 10000;
-                l.collateral = Asset(msg.value, ethPrice, policy.current("ethLiquidation"));
+                uint collateral = (principal * 10000) / (ethPrice * policy.current("ethLTV"));
+
+                require(collateral <= o.collateral);
+
+                o.amount -= principal;
+                o.collateral -= collateral;
+
+                Loan memory l;
+                l.principal = principal;
+                l.collateral = Asset(collateral, ethPrice, policy.current("ethLiquidation"));
                 l.rate = rate;
                 l.start = now;
                 l.end = now + term * 1 seconds;
-                l.borrower = borrower;
                 l.lender = lender;
-                l.open = true;
-
                 loans.push(l);
 
                 // TODO: discuss with team about this
-                if (onchain) CONST.transferFrom(lender, borrower, l.principal); 
+                if (onchain) CONST.transferFrom(lender, o.borrower, l.principal); 
 
-                emit __borrow(loans.length - 1, offchain); 
+                emit __fill(loans.length - 1, offchain); 
         }
 
+        // cancel an open order
+        function cancel(
+                uint oid,
+                bytes32 offchain
+        )       
+                public 
+        {
+                Open storage o = opens[oid];
+
+                require(msg.sender == o.borrower);
+                msg.sender.transfer(o.collateral);
+
+                emit __cancel(oid, offchain); 
+        }
 
         // pay gas for borrower
         function repayByAdmin(
@@ -144,7 +196,7 @@ contract SecuredLoan is Admin {
                 private 
         {
                 Loan storage l = loans[lid];
-                require(l.open);
+                require(!l.done);
 
                 // liquidate if collateral current is approaching within 10% of principle + interest
                 uint payment = l.principal * (1 + l.rate * ((now < l.end? now: l.end) - l.start));
@@ -156,7 +208,7 @@ contract SecuredLoan is Admin {
                 if (onchain) CONST.transferFrom(repayer, l.lender, payment); 
                 repayer.transfer(l.collateral.amount);
 
-                l.open = false;
+                l.done = true ;
                 emit __repay(offchain);
         }
 
