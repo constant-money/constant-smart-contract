@@ -205,7 +205,9 @@ contract SecuredLoan is Admin {
 
                 require(repayer == l.borrower || now > l.end || liquidated);
 
+                // TODO: discuss with team about this
                 if (onchain) CONST.transferFrom(repayer, l.lender, payment); 
+
                 repayer.transfer(l.collateral.amount);
 
                 l.done = true ;
