@@ -11,6 +11,7 @@ contract SimplePolicy is Admin {
         constructor() public {
                 currents["ethLTV"] = 6666; // 66.66%
                 currents["ethLiquidation"] = 1000; // 10.00%
+                currents["ethIncentive"] = 300; // 3.00%
         }
 
         function setParam(bytes32 key, uint value, bytes32 offchain) public onlyAdmin {

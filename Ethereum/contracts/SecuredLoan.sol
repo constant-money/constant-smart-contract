@@ -9,7 +9,7 @@ import 'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol';
 contract SecuredLoan is Admin { 
 
         struct Loan {
-                address borrower;
+                address payable borrower;
                 address lender;
                 uint principal;
                 uint rate;
@@ -21,7 +21,7 @@ contract SecuredLoan is Admin {
 
         struct Asset {
                 uint amount;
-                uint price;
+                uint price; // TODO: review, may remove (extra)
                 uint liquidation;
         }
 
@@ -47,8 +47,6 @@ contract SecuredLoan is Admin {
         event __fill(uint lid, bytes32 offchain);
         event __repay(bytes32 offchain);
 
-        // TODO: ask trong what is this function for?
-        function () external payable {}
 
         // pay gas for borrower
         function borrowByAdmin(
@@ -98,8 +96,8 @@ contract SecuredLoan is Admin {
         }
 
 
-        // match an order
-        function fill(
+        // for gas reason
+        function fillByAdmin(
                 uint oid,
                 address lender,
                 uint principal,
@@ -109,8 +107,38 @@ contract SecuredLoan is Admin {
                 bytes32 offchain
         )       
                 public 
-                onlyAdmin 
         {
+                _fill(oid, lender, principal, term, rate, onchain, offchain);
+        }
+
+
+        // user fill by themselves
+        function fill(
+                uint oid,
+                uint principal,
+                uint term, 
+                uint rate, 
+                bytes32 offchain
+        )       
+                public 
+        {
+                _fill(oid, msg.sender, principal, term, rate, true, offchain);
+        }
+
+        
+        // match an order
+        function _fill(
+                uint oid,
+                address lender,
+                uint principal,
+                uint term, 
+                uint rate, 
+                bool onchain,
+                bytes32 offchain
+        )       
+                private 
+        {
+                // processing order
                 Open storage o = opens[oid];
 
                 require(principal <= o.amount);
@@ -125,6 +153,7 @@ contract SecuredLoan is Admin {
                 o.amount -= principal;
                 o.collateral -= collateral;
 
+                // add a new matched loan
                 Loan memory l;
                 l.principal = principal;
                 l.collateral = Asset(collateral, ethPrice, policy.current("ethLiquidation"));
@@ -134,7 +163,7 @@ contract SecuredLoan is Admin {
                 l.lender = lender;
                 loans.push(l);
 
-                // TODO: discuss with team about this
+                // transfer money
                 if (onchain) CONST.transferFrom(lender, o.borrower, l.principal); 
 
                 emit __fill(loans.length - 1, offchain); 
@@ -150,6 +179,7 @@ contract SecuredLoan is Admin {
                 Open storage o = opens[oid];
 
                 require(msg.sender == o.borrower);
+                // TODO: mark that we sent already
                 msg.sender.transfer(o.collateral);
 
                 emit __cancel(oid, offchain); 
@@ -199,16 +229,18 @@ contract SecuredLoan is Admin {
                 require(!l.done);
 
                 // liquidate if collateral current is approaching within 10% of principle + interest
-                uint payment = l.principal * (1 + l.rate * ((now < l.end? now: l.end) - l.start));
+                uint payment = l.principal * (10000 + l.rate * ((now < l.end? now: l.end) - l.start));
                 uint collateralValue = oracle.current("ethPrice") * l.collateral.amount;
                 bool liquidated = 10000 * collateralValue < payment * (10000 + l.collateral.liquidation); 
 
                 require(repayer == l.borrower || now > l.end || liquidated);
 
-                // TODO: discuss with team about this
                 if (onchain) CONST.transferFrom(repayer, l.lender, payment); 
 
-                repayer.transfer(l.collateral.amount);
+                uint collForRepayer = payment/oracle.current("ethPrice") * (1+policy.current("ethIncentive"));
+
+                repayer.transfer(collForRepayer);
+                l.borrower.transfer(l.collateral.amount - collForRepayer);
 
                 l.done = true ;
                 emit __repay(offchain);
