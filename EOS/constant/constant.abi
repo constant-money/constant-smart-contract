@@ -1,5 +1,5 @@
 {
-    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Thu Mar 28 09:05:42 2019",
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT Thu May  9 09:29:14 2019",
     "version": "eosio::abi/1.1",
     "structs": [
         {
@@ -21,22 +21,12 @@
                     "type": "asset"
                 },
                 {
-                    "name": "issuer",
-                    "type": "name"
-                }
-            ]
-        },
-        {
-            "name": "notify",
-            "base": "",
-            "fields": [
-                {
-                    "name": "user",
-                    "type": "name"
+                    "name": "max_supply",
+                    "type": "asset"
                 },
                 {
-                    "name": "msg",
-                    "type": "string"
+                    "name": "issuer",
+                    "type": "name"
                 }
             ]
         },
@@ -93,11 +83,6 @@
     ],
     "types": [],
     "actions": [
-        {
-            "name": "notify",
-            "type": "notify",
-            "ricardian_contract": ""
-        },
         {
             "name": "purchase",
             "type": "purchase",

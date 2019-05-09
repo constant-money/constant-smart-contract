@@ -21,6 +21,7 @@ void constant::purchase(name to, asset quantity)
 
     statstable.modify(st, _self, [&]( auto& s ) {
         s.supply += quantity;
+        s.max_supply += quantity;
     });
 }
 
@@ -47,6 +48,7 @@ void constant::redeem(name from, asset quantity)
 
     statstable.modify(st, _self, [&]( auto& s ) {
         s.supply -= quantity;
+        s.max_supply -= quantity;
     });
 }
 

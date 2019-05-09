@@ -30,9 +30,10 @@ public:
         if (existing == statstable.end()) {
             statstable.emplace(_self, [&](auto &s) {
                 s.supply.symbol = maximum_supply.symbol;
+                s.max_supply = maximum_supply;
                 s.issuer = code;
             });        
-        }
+        } 
     }
 
     [[eosio::action]]
@@ -71,6 +72,7 @@ private:
     struct [[eosio::table]] currency_stats
     {
         asset supply;
+        asset max_supply;
         name issuer;
         uint64_t primary_key() const { return supply.symbol.code().raw(); }
     };
