@@ -21,7 +21,7 @@ contract SecuredLoan is Admin {
 
         struct Asset {
                 uint amount;
-                uint price; // TODO: review, may remove (extra)
+                uint price;
                 uint liquidation;
         }
 
@@ -49,87 +49,40 @@ contract SecuredLoan is Admin {
         event __repay(bytes32 offchain);
 
 
-        // pay gas for borrower
-        function borrowByAdmin(
-                address borrower, 
-                uint term, 
-                uint rate, 
-                bytes32 offchain
-        ) 
-                public 
-                payable 
-                onlyAdmin 
-        {
-                _borrow(borrower, term, rate, offchain);
-        }
+        function() external payable {}
 
 
-        // if a borrower wants to call the contract directly
-        function borrow(
-                uint term, 
-                uint rate, 
-                bytes32 offchain
-        ) 
-                public 
-                payable 
-        {
-                _borrow(msg.sender, term, rate, offchain);
+        constructor(address _policy, address _oracle, address _constant) public {
+                policy = ISimplePolicy(_policy);
+                oracle = IOracle(_oracle);
+                CONST = IERC20(_constant);
         }
 
 
         // take a secured loan with ETH as collateral
-        function _borrow(
+        function borrow(
                 address borrower,
                 uint term, 
                 uint rate, 
                 bytes32 offchain
         ) 
-                private
+                public 
+                onlyAdmin
         {
                 Open memory o;
                 o.borrower = borrower;
                 o.term = term;
                 o.rate = rate;
-                o.collateral = msg.value;
+                o.collateral = address(this).balance;
                 o.done = false;
                 opens.push(o);
 
                 emit __borrow(opens.length - 1, offchain); 
         }
 
-
-        // for gas reason
-        function fillByAdmin(
-                uint oid,
-                address lender,
-                uint principal,
-                uint term, 
-                uint rate, 
-                bool onchain,
-                bytes32 offchain
-        )       
-                public 
-        {
-                _fill(oid, lender, principal, term, rate, onchain, offchain);
-        }
-
-
-        // user fill by themselves
-        function fill(
-                uint oid,
-                uint principal,
-                uint term, 
-                uint rate, 
-                bytes32 offchain
-        )       
-                public 
-        {
-                _fill(oid, msg.sender, principal, term, rate, true, offchain);
-        }
-
         
         // match an order
-        function _fill(
+        function fill(
                 uint oid,
                 address lender,
                 uint principal,
@@ -138,7 +91,8 @@ contract SecuredLoan is Admin {
                 bool onchain,
                 bytes32 offchain
         )       
-                private 
+                public 
+                onlyAdmin
         {
                 // processing order
                 Open storage o = opens[oid];
@@ -259,5 +213,11 @@ contract SecuredLoan is Admin {
         function loan(uint lid) public view returns (uint, uint, address, uint) {
                 Loan storage l = loans[lid];
                 return (l.principal, l.end, l.borrower, l.collateral.amount);
+        }
+
+        function principal(uint collateral) public view returns (uint) {
+                uint ethPrice = oracle.current("ethPrice");
+                uint p = collateral / ((ethPrice * policy.current("ethLTV")) * 10000);
+                return p;
         }
 }
