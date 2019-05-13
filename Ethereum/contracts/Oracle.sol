@@ -5,10 +5,10 @@ import './Admin.sol';
 contract Oracle is Admin { 
 
         // data feed size 
-        uint private size;
+        uint public size;
 
         // how often an oracle is allowed to submit a new data
-        uint private frequency;
+        uint public frequency;
 
         // data feed
         mapping(bytes32 => uint[]) private currents; 

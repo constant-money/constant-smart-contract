@@ -1,12 +1,12 @@
-const p2p = artifacts.require("SecuredLoan")
 const policy = artifacts.require("SimplePolicy")
 const oracle = artifacts.require("Oracle")
+const p2p = artifacts.require("SecuredLoan")
 
 
 const eq = assert.equal
 const u = require('./util.js')
 const oc = u.oc
-let sl, sp, o;
+let sl, sp, or;
 
 contract("SecuredLoan", (accounts) => {
         const root = accounts[0]
@@ -270,6 +270,8 @@ contract("SecuredLoan", (accounts) => {
 
 contract("SimplePolicy", (accounts) => {
         const root = accounts[0]
+        const account = accounts[1]
+        const admin = accounts[2]
         const OFFCHAIN = web3.utils.fromAscii('1')
 
         before(async () => {
@@ -303,6 +305,36 @@ contract("SimplePolicy", (accounts) => {
 
         })
 
+        describe('admin func', () => {
+
+                it('add admin', async() => {
+                        const i = {
+                                empty: '0x0000000000000000000000000000000000000000',
+                                admin: admin,
+                                superAdmin: root,
+                        }
+
+                        await sp.addAdmin(i.admin, {from: i.superAdmin})
+                        await u.assertRevert(sp.addAdmin(i.empty, {from: i.superAdmin}))
+                        await u.assertRevert(sp.addAdmin(i.admin, {from: i.admin}))
+
+                });
+
+                it('remove admin', async() => {
+                        const i = {
+                                empty: '0x0000000000000000000000000000000000000000',
+                                admin: admin,
+                                superAdmin: root,
+                        }
+
+                        await u.assertRevert(sp.removeAdmin(i.empty, {from: i.superAdmin}))
+                        await u.assertRevert(sp.removeAdmin(i.admin, {from: i.admin}))
+                        await sp.removeAdmin(i.admin, {from: i.superAdmin})
+
+                });
+
+        })
+
 
         describe('set param', () => {
 
@@ -320,12 +352,88 @@ contract("SimplePolicy", (accounts) => {
                                 ethIncentive: 310,
                         }
 
-                        await sp.setParam(i.ethLTV, 7000, OFFCHAIN, {from: i.admin})
+                        await sp.setParam(i.ethLTV, o.ethLTV, OFFCHAIN, {from: i.admin})
                         let value = await sp.current(i.ethLTV)
                         eq(o.ethLTV, value)
 
+                        await u.assertRevert(sp.setParam(i.ethLTV, 6666, OFFCHAIN, {from: account}))
+
+                        await sp.setParam(i.ethLiquidation, o.ethLiquidation, OFFCHAIN, {from: i.admin})
+                        value = await sp.current(i.ethLiquidation)
+                        eq(o.ethLiquidation, value)
+
+                        await sp.setParam(i.ethIncentive, o.ethIncentive, OFFCHAIN, {from: i.admin})
+                        value = await sp.current(i.ethIncentive)
+                        eq(o.ethIncentive, value)
                 });
 
+        })
+
+})
+
+contract("Oracle", (accounts) => {
+        const root = accounts[0]
+        const oracle1 = accounts[1]
+        const oracle2 = accounts[2]
+        const account3 = accounts[3]
+        const OFFCHAIN = web3.utils.fromAscii('1')
+
+        before(async () => {
+                or = await oracle.deployed()
+        })
+
+        describe('contract', () => {
+
+                it('check params', async() => {
+                        const o = {
+                                size: 10,
+                                frequency: 1,
+                        }
+
+                        const frequency = await or.frequency();
+                        const size = await or.size();
+                        
+                        
+                        eq(o.size, size)
+                        eq(o.frequency, frequency)
+
+                });
+
+                it('add oracle', async() => {
+                        await or.addOracle(oracle1, OFFCHAIN, {from: root})
+                        await or.addOracle(oracle2, OFFCHAIN, {from: root})
+
+                });
+
+                it('remove oracle', async() => {
+                        await or.removeOracle(oracle1, OFFCHAIN, {from: root})
+                        await or.removeOracle(oracle2, OFFCHAIN, {from: root})
+
+                });
+
+                it('set size', () => {
+                        const i = {
+                                admin: root,
+                                oracle: 
+                        }
+
+                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: i.admin}))
+                        await or.setSize(1, OFFCHAIN, {from: i.admin})
+
+                });
+
+
+                it('set frequency', () => {
+
+
+                });
+
+
+                it('feed data', () => {
+
+
+                });
+                
         })
 
 })
