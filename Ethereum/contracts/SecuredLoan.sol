@@ -139,6 +139,7 @@ contract SecuredLoan is Admin {
                 require(!o.done);
 
                 o.done = true;
+                o.collateral = 0;
                 msg.sender.transfer(o.collateral);
 
                 emit __cancel(oid, offchain); 
