@@ -175,6 +175,7 @@ contract SecuredLoan is Admin {
         // 1. borrower repays early
         // 2. borrower defaults (then anyone can repay and get the over-collateral)
         // 3. collateral current drops (then liquidation kicks in) 
+        // 4, collateral current go up (if value exceeds x%)
         // 
         // note that the repayer must approve the contract to spend its Const first.
         function _repay(

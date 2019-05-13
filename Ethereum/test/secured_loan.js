@@ -1,4 +1,4 @@
-const c = artifacts.require("")
+const constant = artifacts.require("Constant")
 const policy = artifacts.require("SimplePolicy")
 const oracle = artifacts.require("Oracle")
 const p2p = artifacts.require("SecuredLoan")
@@ -7,7 +7,7 @@ const p2p = artifacts.require("SecuredLoan")
 const eq = assert.equal
 const u = require('./util.js')
 const oc = u.oc
-let sl, sp, or;
+let sl, sp, or, c;
 
 contract("SecuredLoan", (accounts) => {
         const root = accounts[0]
@@ -21,20 +21,18 @@ contract("SecuredLoan", (accounts) => {
         before(async () => {
                 sp = await policy.deployed()
                 or = await oracle.deployed()
-                sl = await p2p.deployed(sp.address, or.address)
+                c = await constant.deployed()
+
+                sl = await p2p.deployed(sp.address, or.address, c.address)
         })
 
-        // describe('init contract', () => {
+        describe('init contract', () => {
 
-        //         it('check admin', async() => {
-        //                 let value = await sl.admin(root)
-        //                 eq(true, value)
+                it('check contract', async() => {
+                        
+                });
 
-        //                 value = await sl.admin(liquidator)
-        //                 eq(false, value)
-        //         });
-
-        // })
+        })
 
 
         // describe('add admin', () => {
@@ -395,26 +393,12 @@ contract("Oracle", (accounts) => {
 
                         const tx = await or.data();
                         const size = tx[0].toNumber();
-                        const frequency = tx[1].toNumber()
+                        const frequency = tx[1].toNumber();
 
                         eq(10, size);
                         eq(1, frequency);
 
                 });
-
-                
-
-
-                // it('set frequency', () => {
-
-
-                // });
-
-
-                // it('feed data', () => {
-
-
-                // });
                 
         })
 
@@ -422,14 +406,14 @@ contract("Oracle", (accounts) => {
         describe('manage oracle', () => {
 
                 it('add oracle', async() => {
-                        await or.addOracle(oracle1, OFFCHAIN, {from: root})
-                        await or.addOracle(oracle2, OFFCHAIN, {from: root})
+                        await or.addOracle(oracle1, OFFCHAIN, {from: root});
+                        await or.addOracle(oracle2, OFFCHAIN, {from: root});
 
                 });
 
                 it('remove oracle', async() => {
-                        await or.removeOracle(oracle1, OFFCHAIN, {from: root})
-                        await or.removeOracle(oracle2, OFFCHAIN, {from: root})
+                        await or.removeOracle(oracle1, OFFCHAIN, {from: root});
+                        await or.removeOracle(oracle2, OFFCHAIN, {from: root});
 
                 });
 
@@ -444,15 +428,85 @@ contract("Oracle", (accounts) => {
                                 oracle: oracle1,
                         }
         
-                        await or.addOracle(i.oracle, OFFCHAIN, {from: root})
-                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: account}))
-                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: i.oracle}))
+                        await or.addOracle(i.oracle, OFFCHAIN, {from: root});
+                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: account}));
+                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: i.oracle}));
 
-                        await or.setSize(1, OFFCHAIN, {from: i.admin})
+                        await or.setSize(2, OFFCHAIN, {from: i.admin});
+
+                        const tx = await or.data();
+                        const size = tx[0].toNumber();
+                        eq(2, size);
         
                 });
 
         })
+
+
+        describe('manage frequency', () => {
+
+                it('set frequency', async () => {
+                        const i = {
+                                admin: root,
+                                oracle: oracle1,
+                        }
         
+                        await u.assertRevert(or.setFrequency(1, OFFCHAIN, {from: account}));
+                        await u.assertRevert(or.setFrequency(1, OFFCHAIN, {from: i.oracle}));
+
+                        await or.setFrequency(2, OFFCHAIN, {from: i.admin});
+                        const tx = await or.data();
+                        const frequency = tx[1].toNumber();
+                        eq(2, frequency);
+                });
+
+        })
+
+        describe('feed data', () => {
+
+                it('feed ethPrice', async () => {
+                        const i = {
+                                key: web3.utils.fromAscii('ethPrice'),
+                                value: 18684, // 186.84 US
+                                oracle: oracle1,
+                        }
+
+                        const o = {
+                                value: 18684,
+                        }
+        
+                        await or.feed(i.key, i.value, OFFCHAIN, {from: i.oracle});
+                        await u.assertRevert(or.feed(i.key, i.value, OFFCHAIN, {from: root}));
+
+                        const tx = await or.current(i.key, {from: i.oracle});
+                        const value = tx.toNumber();
+                        eq(value, o.value);
+                });
+
+        })
+        
+
+        describe('current data', () => {
+
+                it('ethPrice', async () => {
+                        const i = {
+                                key: web3.utils.fromAscii('ethPrice'),
+                                value: 19600, // 196.00 US
+                                oracle: oracle1,
+                        }
+
+                        const o = {
+                                value: 19600, // 196.00 US
+                        }
+        
+                        // feed more data
+                        u.increaseTime(10)
+                        await or.feed(i.key, i.value, OFFCHAIN, {from: i.oracle});
+                        const tx = await or.current(i.key, {from: i.oracle});
+                        const value = tx.toNumber();
+                        eq(value, o.value);
+                });
+
+        })
 
 })
