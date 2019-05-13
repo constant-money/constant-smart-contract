@@ -5,10 +5,10 @@ import './Admin.sol';
 contract Oracle is Admin { 
 
         // data feed size 
-        uint public size;
+        uint private size;
 
         // how often an oracle is allowed to submit a new data
-        uint public frequency;
+        uint private frequency;
 
         // data feed
         mapping(bytes32 => uint[]) private currents; 
@@ -117,5 +117,9 @@ contract Oracle is Admin {
          */
         function current(bytes32 key) public view returns (uint){
                 return currents[key][currents[key].length/2];
+        }
+
+        function data() public onlyAdmin view returns (uint, uint) {
+                return (size, frequency);
         }
 }

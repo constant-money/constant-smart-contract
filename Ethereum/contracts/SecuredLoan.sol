@@ -136,11 +136,11 @@ contract SecuredLoan is Admin {
                 Open storage o = opens[oid];
 
                 require(msg.sender == o.borrower);
-                require(!o.done);
+                require(!o.done && o.collateral > 0);
 
                 o.done = true;
-                o.collateral = 0;
                 msg.sender.transfer(o.collateral);
+                o.collateral = 0;
 
                 emit __cancel(oid, offchain); 
         }

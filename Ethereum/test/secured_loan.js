@@ -1,3 +1,4 @@
+const c = artifacts.require("")
 const policy = artifacts.require("SimplePolicy")
 const oracle = artifacts.require("Oracle")
 const p2p = artifacts.require("SecuredLoan")
@@ -18,7 +19,9 @@ contract("SecuredLoan", (accounts) => {
         const OFFCHAIN = web3.utils.fromAscii('1')
 
         before(async () => {
-                // sl = await p2p.deployed()
+                sp = await policy.deployed()
+                or = await oracle.deployed()
+                sl = await p2p.deployed(sp.address, or.address)
         })
 
         // describe('init contract', () => {
@@ -375,7 +378,7 @@ contract("Oracle", (accounts) => {
         const root = accounts[0]
         const oracle1 = accounts[1]
         const oracle2 = accounts[2]
-        const account3 = accounts[3]
+        const account = accounts[3]
         const OFFCHAIN = web3.utils.fromAscii('1')
 
         before(async () => {
@@ -390,14 +393,33 @@ contract("Oracle", (accounts) => {
                                 frequency: 1,
                         }
 
-                        const frequency = await or.frequency();
-                        const size = await or.size();
-                        
-                        
-                        eq(o.size, size)
-                        eq(o.frequency, frequency)
+                        const tx = await or.data();
+                        const size = tx[0].toNumber();
+                        const frequency = tx[1].toNumber()
+
+                        eq(10, size);
+                        eq(1, frequency);
 
                 });
+
+                
+
+
+                // it('set frequency', () => {
+
+
+                // });
+
+
+                // it('feed data', () => {
+
+
+                // });
+                
+        })
+
+
+        describe('manage oracle', () => {
 
                 it('add oracle', async() => {
                         await or.addOracle(oracle1, OFFCHAIN, {from: root})
@@ -411,29 +433,26 @@ contract("Oracle", (accounts) => {
 
                 });
 
-                it('set size', () => {
+        })
+
+
+        describe('manage size', () => {
+
+                it('set size', async () => {
                         const i = {
                                 admin: root,
-                                oracle: 
+                                oracle: oracle1,
                         }
+        
+                        await or.addOracle(i.oracle, OFFCHAIN, {from: root})
+                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: account}))
+                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: i.oracle}))
 
-                        await u.assertRevert(or.setSize(1, OFFCHAIN, {from: i.admin}))
                         await or.setSize(1, OFFCHAIN, {from: i.admin})
-
+        
                 });
 
-
-                it('set frequency', () => {
-
-
-                });
-
-
-                it('feed data', () => {
-
-
-                });
-                
         })
+        
 
 })
