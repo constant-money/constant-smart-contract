@@ -290,7 +290,7 @@ contract("SecuredLoan", (accounts) => {
                         const i = {
                                 key: web3.utils.fromAscii('ethPrice'),
                                 value: 19600, // 196.00US
-                                oracle: oracle1,                                
+                                oracle: oracle1,
                         }
 
 
@@ -299,6 +299,20 @@ contract("SecuredLoan", (accounts) => {
 
 
                 it('feed param for policy', async() => {
+                        const i = {
+                                key: web3.utils.fromAscii('ethLegendary'),
+                                value: 2000, // 20%
+                                admin: root,
+                        }
+
+                        const o = {
+                                value: 2000,
+                        }
+
+
+                        await sp.setParam(i.key, i.value, OFFCHAIN, {from: i.admin});
+                        const tx = await sp.current(i.key, {from: i.admin});
+                        eq(o.value, tx.toNumber());
 
                 })
 
@@ -382,40 +396,29 @@ contract("SecuredLoan", (accounts) => {
 
                 })
 
-                // it('borrower 1 create loan', async() => {
-                //         const i = {
-                //                 principal: 1000,
-                //                 term: 1,
-                //                 closingWindow: 200,
-                //                 ethInterest: 360,
-                //                 ethPrice: 17630,
-                //                 borrower: borrower1
-                //         }
+                it('borrower 1 create loan', async() => {
+                        const i = {
+                                borrower: borrower1,
+                                term: 1,
+                                rate: 10,
+                                amount: 100000, // 1000US
+                                admin: root,
+                        }
 
-                //         const o = {
-                //                 lid: 0
-                //         }
-                //         const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
-                //         eq(o.lid, await oc(tx, "__borrow", "lid"))
-                // })
+                        const o = {
+                                oid: 0,
+                                collateral: 1,
+                        }
+
+                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.amount, OFFCHAIN, {from: i.borrower}));
+                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.amount, OFFCHAIN, {from: i.admin});
+                        eq(o.oid, await oc(tx, "__borrow", "oid"));
+                })
 
 
-                // it('borrower 2 create loan', async() => {
-                //         const i = {
-                //                 principal: 1000,
-                //                 term: 1,
-                //                 closingWindow: 200,
-                //                 ethInterest: 360,
-                //                 ethPrice: 17630,
-                //                 borrower: borrower1
-                //         }
-
-                //         const o = {
-                //                 lid: 1
-                //         }
-                //         const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
-                //         eq(o.lid, await oc(tx, "__borrow", "lid"))
-                // })
+                it('borrower 2 create loan', async() => {
+                       
+                })
 
 
         })        

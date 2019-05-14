@@ -21,7 +21,6 @@ contract SecuredLoan is Admin {
 
         struct Asset {
                 uint amount;
-                uint price;
                 uint liquidation;
         }
 
@@ -66,6 +65,7 @@ contract SecuredLoan is Admin {
                 address borrower,
                 uint term, 
                 uint rate, 
+                uint amount,
                 bytes32 offchain
         ) 
                 public 
@@ -77,6 +77,7 @@ contract SecuredLoan is Admin {
                 o.borrower = borrower;
                 o.term = term;
                 o.rate = rate;
+                o.amount = amount;
                 o.collateral = address(this).balance - stake;
                 o.done = false;
                 opens.push(o);
@@ -91,6 +92,7 @@ contract SecuredLoan is Admin {
                 uint oid,
                 address lender,
                 uint principal,
+                uint collateral,
                 uint term, 
                 uint rate, 
                 bool onchain,
@@ -105,10 +107,6 @@ contract SecuredLoan is Admin {
                 require(principal <= o.amount);
                 require(rate <= o.rate);
                 require(term >= o.term);
-
-                uint ethPrice = oracle.current("ethPrice");
-                uint collateral = (principal * 10000) / (ethPrice * policy.current("ethLTV"));
-
                 require(collateral <= o.collateral);
 
                 o.amount -= principal;
@@ -117,7 +115,7 @@ contract SecuredLoan is Admin {
                 // add a new matched loan
                 Loan memory l;
                 l.principal = principal;
-                l.collateral = Asset(collateral, ethPrice, policy.current("ethLiquidation"));
+                l.collateral = Asset(collateral, policy.current("ethLiquidation"));
                 l.rate = rate;
                 l.start = now;
                 l.end = now + term * 1 seconds;
@@ -181,7 +179,7 @@ contract SecuredLoan is Admin {
         // 1. borrower repays early
         // 2. borrower defaults (then anyone can repay and get the over-collateral)
         // 3. collateral current drops (then liquidation kicks in) 
-        // 4, collateral current go up (if value exceeds x%)
+        // 4. collateral current go up (if value exceeds x%)
         // 
         // note that the repayer must approve the contract to spend its Const first.
         function _repay(
