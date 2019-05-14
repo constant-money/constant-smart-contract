@@ -281,6 +281,27 @@ contract("SecuredLoan", (accounts) => {
                         await sl.send(i.deposit, {from: i.borrower})
                 })
 
+                it('add oracle', async() => {
+                        await or.addOracle(oracle1, OFFCHAIN, {from: root});
+                })
+
+
+                it('feed data for oracle', async() => {
+                        const i = {
+                                key: web3.utils.fromAscii('ethPrice'),
+                                value: 19600, // 196.00US
+                                oracle: oracle1,                                
+                        }
+
+
+                        await or.feed(i.key, i.value, OFFCHAIN, {from: i.oracle});
+                })
+
+
+                it('feed param for policy', async() => {
+
+                })
+
         })
 
 
@@ -315,75 +336,89 @@ contract("SecuredLoan", (accounts) => {
         })
 
 
-        // describe('remove admin', () => {
+        describe('remove admin', () => {
 
-        //         it('failed if address is empty', async() => {
-        //                 const i = {
-        //                         address: '0x0000000000000000000000000000000000000000',
-        //                         admin: root
-        //                 }
+                it('failed if address is empty', async() => {
+                        const i = {
+                                address: '0x0000000000000000000000000000000000000000',
+                                admin: root
+                        }
 
-        //                 await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
-        //         });
-
-
-        //         it('borrower call it', async() => {
-        //                 const i = {
-        //                         address: admin1,
-        //                         admin: borrower1
-        //                 }
-        //                 await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
-        //         });
-
-        //         it('only admin can call it', async() => {
-        //                 const i = {
-        //                         address: admin1,
-        //                         admin: root
-        //                 }
-        //                 await sl.removeAdmin(i.address, {from: i.admin})
-        //         });
-
-        // })
-
-        // describe('borrow', () => {
-
-        //         it('borrower 1 create loan', async() => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower1
-        //                 }
-
-        //                 const o = {
-        //                         lid: 0
-        //                 }
-        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-        //         })
+                        await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
+                });
 
 
-        //         it('borrower 2 create loan', async() => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower1
-        //                 }
+                it('borrower call it', async() => {
+                        const i = {
+                                address: admin1,
+                                admin: borrower1
+                        }
+                        await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
+                });
 
-        //                 const o = {
-        //                         lid: 1
-        //                 }
-        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-        //         })
+                it('only admin can call it', async() => {
+                        const i = {
+                                address: admin1,
+                                admin: root
+                        }
+                        await sl.removeAdmin(i.address, {from: i.admin})
+                });
+
+        })
+
+        describe('borrow', () => {
+
+                it('get principal', async() => {
+                        const i = {
+                                collateral: 1,
+                        }
+
+                        const o = {
+                                value: 13065, // 130.65US
+                        }
+
+                        const tx = await sl.principal(i.collateral, {from: root});
+                        eq(o.value, tx.toNumber());
+
+                })
+
+                // it('borrower 1 create loan', async() => {
+                //         const i = {
+                //                 principal: 1000,
+                //                 term: 1,
+                //                 closingWindow: 200,
+                //                 ethInterest: 360,
+                //                 ethPrice: 17630,
+                //                 borrower: borrower1
+                //         }
+
+                //         const o = {
+                //                 lid: 0
+                //         }
+                //         const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
+                //         eq(o.lid, await oc(tx, "__borrow", "lid"))
+                // })
 
 
-        // })        
+                // it('borrower 2 create loan', async() => {
+                //         const i = {
+                //                 principal: 1000,
+                //                 term: 1,
+                //                 closingWindow: 200,
+                //                 ethInterest: 360,
+                //                 ethPrice: 17630,
+                //                 borrower: borrower1
+                //         }
+
+                //         const o = {
+                //                 lid: 1
+                //         }
+                //         const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
+                //         eq(o.lid, await oc(tx, "__borrow", "lid"))
+                // })
+
+
+        })        
 
         // describe('payoff', () => {
 

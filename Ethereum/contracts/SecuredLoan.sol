@@ -226,7 +226,7 @@ contract SecuredLoan is Admin {
 
         function principal(uint collateral) public view returns (uint) {
                 uint ethPrice = oracle.current("ethPrice");
-                uint p = collateral / ((ethPrice * policy.current("ethLTV")) * 10000);
+                uint p = collateral * (ethPrice * policy.current("ethLTV") / 10000);
                 return p;
         }
 }
