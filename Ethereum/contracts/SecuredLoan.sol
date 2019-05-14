@@ -34,6 +34,8 @@ contract SecuredLoan is Admin {
                 bool done;
         }
 
+        uint private stake;
+
         Loan[] private loans;
         Open[] private opens;
 
@@ -43,7 +45,7 @@ contract SecuredLoan is Admin {
         IERC20 private CONST;
 
         // events to track onchain (ethereum) and offchain (our database)
-        event __borrow(uint oid, bytes32 offchain);
+        event __borrow(uint oid, uint collateral, bytes32 offchain);
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(bytes32 offchain);
@@ -69,15 +71,18 @@ contract SecuredLoan is Admin {
                 public 
                 onlyAdmin
         {
+
+                require(address(this).balance - stake > 0, "cannot init borrow");
                 Open memory o;
                 o.borrower = borrower;
                 o.term = term;
                 o.rate = rate;
-                o.collateral = address(this).balance;
+                o.collateral = address(this).balance - stake;
                 o.done = false;
                 opens.push(o);
+                stake = stake + address(this).balance;
 
-                emit __borrow(opens.length - 1, offchain); 
+                emit __borrow(opens.length - 1, o.collateral, offchain); 
         }
 
         
@@ -141,6 +146,7 @@ contract SecuredLoan is Admin {
                 o.done = true;
                 msg.sender.transfer(o.collateral);
                 o.collateral = 0;
+                stake = stake - o.collateral;
 
                 emit __cancel(oid, offchain); 
         }
@@ -208,6 +214,7 @@ contract SecuredLoan is Admin {
                         l.borrower.transfer(l.collateral.amount - amt);
                 }
 
+                stake = stake - l.collateral.amount;
                 emit __repay(offchain);
         }
 

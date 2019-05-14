@@ -9,265 +9,6 @@ const u = require('./util.js')
 const oc = u.oc
 let sl, sp, or, c;
 
-contract("SecuredLoan", (accounts) => {
-        const root = accounts[0]
-        const liquidator = accounts[1]
-        const borrower1 = accounts[2]
-        const borrower2 = accounts[3]
-        const admin1 = accounts[4]
-
-        const OFFCHAIN = web3.utils.fromAscii('1')
-
-        before(async () => {
-                sp = await policy.deployed()
-                or = await oracle.deployed()
-                c = await constant.deployed()
-
-                sl = await p2p.deployed(sp.address, or.address, c.address)
-        })
-
-        describe('init contract', () => {
-
-                it('check contract', async() => {
-                        
-                });
-
-        })
-
-
-        // describe('add admin', () => {
-
-        //         it('failed if address is empty', async() => {
-        //                 const i = {
-        //                         address: '0x0000000000000000000000000000000000000000',
-        //                         admin: root
-        //                 }
-
-        //                 await u.assertRevert(sl.addAdmin(i.address, {from: i.admin}))
-        //         });
-
-
-        //         it('borrower call it', async() => {
-        //                 const i = {
-        //                         address: admin1,
-        //                         admin: borrower1
-        //                 }
-        //                 await u.assertRevert(sl.addAdmin(i.address, {from: i.admin}))
-        //         });
-
-        //         it('only admin can call it', async() => {
-        //                 const i = {
-        //                         address: admin1,
-        //                         admin: root
-        //                 }
-        //                 await sl.addAdmin(i.address, {from: i.admin})
-        //         });
-
-        // })
-
-
-        // describe('remove admin', () => {
-
-        //         it('failed if address is empty', async() => {
-        //                 const i = {
-        //                         address: '0x0000000000000000000000000000000000000000',
-        //                         admin: root
-        //                 }
-
-        //                 await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
-        //         });
-
-
-        //         it('borrower call it', async() => {
-        //                 const i = {
-        //                         address: admin1,
-        //                         admin: borrower1
-        //                 }
-        //                 await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
-        //         });
-
-        //         it('only admin can call it', async() => {
-        //                 const i = {
-        //                         address: admin1,
-        //                         admin: root
-        //                 }
-        //                 await sl.removeAdmin(i.address, {from: i.admin})
-        //         });
-
-        // })
-
-        // describe('borrow', () => {
-
-        //         it('borrower 1 create loan', async() => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower1
-        //                 }
-
-        //                 const o = {
-        //                         lid: 0
-        //                 }
-        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-        //         })
-
-
-        //         it('borrower 2 create loan', async() => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower1
-        //                 }
-
-        //                 const o = {
-        //                         lid: 1
-        //                 }
-        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-        //         })
-
-
-        // })        
-
-        // describe('payoff', () => {
-
-        //         before(async () => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower1,
-        //                         value: web3.utils.toWei('0.1', 'ether')
-        //                 }
-
-        //                 const o = {
-        //                         lid: 2
-        //                 }
-        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower, value: i.value})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-        //         })
-
-        //         it('cannot call payoff if not borrower or admin', async() => {
-        //                 const i = {
-        //                         lid: 2,
-        //                         borrower: admin1
-        //                 }
-
-        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
-        //         })
-
-        //         it('cannot call payoff if still not reach end time', async() => {
-        //                 const i = {
-        //                         lid: 2,
-        //                         borrower: borrower1
-        //                 }
-
-        //                 await u.increaseTime(1)
-        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
-                        
-        //         })
-
-        //         it('cannot call payoff twice', async() => {
-        //                 const i = {
-        //                         lid: 2,
-        //                         borrower: borrower1
-        //                 }
-        //                 await u.increaseTime(500)
-        //                 await sl.payoff(i.lid, OFFCHAIN, {from: i.borrower})
-        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
-        //         })
-
-
-        // })
-
-        // describe('liquidate', () => {
-
-        //         before(async () => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower1,
-        //                         value: web3.utils.toWei('0.1', 'ether')
-        //                 }
-
-        //                 const o = {
-        //                         lid: 3
-        //                 }
-        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower, value: i.value})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-        //         })
-
-        //         it('cannot send eth to empty liquidator address', async() => {
-        //                 const i = {
-        //                         lid: 3,
-        //                         liquidator: '0x0000000000000000000000000000000000000000',
-        //                         admin: root
-        //                 }
-        //                 await u.assertRevert(sl.liquidate(i.lid, i.liquidator, OFFCHAIN, {from: i.admin}))
-        //         })
-
-        //         it('only admin can call it', async() => {
-        //                 const i = {
-        //                         lid: 3,
-        //                         liquidator: liquidator,
-        //                         admin: root
-        //                 }
-        //                 await sl.liquidate(i.lid, i.liquidator, OFFCHAIN, {from: i.admin})
-        //         })
-
-        //         it('cannot call payoff then', async() => {
-        //                 const i = {
-        //                         lid: 3,
-        //                         borrower: borrower1
-        //                 }
-
-        //                 await u.increaseTime(1000)
-        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
-        //         })
-        // })
-
-
-        // describe('borrow by admin', () => {
-
-        //         it('init', async () => {
-        //                 const i = {
-        //                         principal: 1000,
-        //                         term: 1,
-        //                         closingWindow: 200,
-        //                         ethInterest: 360,
-        //                         ethPrice: 17630,
-        //                         borrower: borrower2,
-        //                         value: web3.utils.toWei('0.1', 'ether'),
-        //                         admin: root
-        //                 }
-
-        //                 const o = {
-        //                         lid: 4
-        //                 }
-        //                 const tx = await sl.borrowByAdmin(i.borrower, i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.admin, value: i.value})
-        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
-
-        //                 const loan = await sl.getOpenLoan(o.lid)
-        //                 eq(i.principal, loan[0].toNumber())
-        //                 eq(i.term, loan[1].toNumber())
-        //                 eq(i.borrower, loan[3])
-        //         })
-
-        // })
-})
-
 
 contract("SimplePolicy", (accounts) => {
         const root = accounts[0]
@@ -509,4 +250,269 @@ contract("Oracle", (accounts) => {
 
         })
 
+})
+
+contract("SecuredLoan", (accounts) => {
+        const root = accounts[0]
+        const oracle1 = accounts[1]
+        const borrower1 = accounts[2]
+        const borrower2 = accounts[3]
+        const admin1 = accounts[4]
+
+        const OFFCHAIN = web3.utils.fromAscii('1')
+
+        before(async () => {
+                sp = await policy.deployed()
+                or = await oracle.deployed()
+                c = await constant.deployed()
+
+                sl = await p2p.deployed(sp.address, or.address, c.address)
+        })
+
+
+        describe('init contract', () => {
+
+                it('deposit ether', async() => {
+                        const i = {
+                                deposit: web3.utils.toWei('1', 'ether'),
+                                borrower: borrower1,
+                        }
+
+                        await sl.send(i.deposit, {from: i.borrower})
+                })
+
+        })
+
+
+        describe('add admin', () => {
+
+                it('failed if address is empty', async() => {
+                        const i = {
+                                address: '0x0000000000000000000000000000000000000000',
+                                admin: root
+                        }
+
+                        await u.assertRevert(sl.addAdmin(i.address, {from: i.admin}))
+                });
+
+
+                it('borrower call it', async() => {
+                        const i = {
+                                address: admin1,
+                                admin: borrower1
+                        }
+                        await u.assertRevert(sl.addAdmin(i.address, {from: i.admin}))
+                });
+
+                it('only admin can call it', async() => {
+                        const i = {
+                                address: admin1,
+                                admin: root
+                        }
+                        await sl.addAdmin(i.address, {from: i.admin})
+                });
+
+        })
+
+
+        // describe('remove admin', () => {
+
+        //         it('failed if address is empty', async() => {
+        //                 const i = {
+        //                         address: '0x0000000000000000000000000000000000000000',
+        //                         admin: root
+        //                 }
+
+        //                 await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
+        //         });
+
+
+        //         it('borrower call it', async() => {
+        //                 const i = {
+        //                         address: admin1,
+        //                         admin: borrower1
+        //                 }
+        //                 await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
+        //         });
+
+        //         it('only admin can call it', async() => {
+        //                 const i = {
+        //                         address: admin1,
+        //                         admin: root
+        //                 }
+        //                 await sl.removeAdmin(i.address, {from: i.admin})
+        //         });
+
+        // })
+
+        // describe('borrow', () => {
+
+        //         it('borrower 1 create loan', async() => {
+        //                 const i = {
+        //                         principal: 1000,
+        //                         term: 1,
+        //                         closingWindow: 200,
+        //                         ethInterest: 360,
+        //                         ethPrice: 17630,
+        //                         borrower: borrower1
+        //                 }
+
+        //                 const o = {
+        //                         lid: 0
+        //                 }
+        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
+        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
+        //         })
+
+
+        //         it('borrower 2 create loan', async() => {
+        //                 const i = {
+        //                         principal: 1000,
+        //                         term: 1,
+        //                         closingWindow: 200,
+        //                         ethInterest: 360,
+        //                         ethPrice: 17630,
+        //                         borrower: borrower1
+        //                 }
+
+        //                 const o = {
+        //                         lid: 1
+        //                 }
+        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower})
+        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
+        //         })
+
+
+        // })        
+
+        // describe('payoff', () => {
+
+        //         before(async () => {
+        //                 const i = {
+        //                         principal: 1000,
+        //                         term: 1,
+        //                         closingWindow: 200,
+        //                         ethInterest: 360,
+        //                         ethPrice: 17630,
+        //                         borrower: borrower1,
+        //                         value: web3.utils.toWei('0.1', 'ether')
+        //                 }
+
+        //                 const o = {
+        //                         lid: 2
+        //                 }
+        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower, value: i.value})
+        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
+        //         })
+
+        //         it('cannot call payoff if not borrower or admin', async() => {
+        //                 const i = {
+        //                         lid: 2,
+        //                         borrower: admin1
+        //                 }
+
+        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
+        //         })
+
+        //         it('cannot call payoff if still not reach end time', async() => {
+        //                 const i = {
+        //                         lid: 2,
+        //                         borrower: borrower1
+        //                 }
+
+        //                 await u.increaseTime(1)
+        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
+                        
+        //         })
+
+        //         it('cannot call payoff twice', async() => {
+        //                 const i = {
+        //                         lid: 2,
+        //                         borrower: borrower1
+        //                 }
+        //                 await u.increaseTime(500)
+        //                 await sl.payoff(i.lid, OFFCHAIN, {from: i.borrower})
+        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
+        //         })
+
+
+        // })
+
+        // describe('liquidate', () => {
+
+        //         before(async () => {
+        //                 const i = {
+        //                         principal: 1000,
+        //                         term: 1,
+        //                         closingWindow: 200,
+        //                         ethInterest: 360,
+        //                         ethPrice: 17630,
+        //                         borrower: borrower1,
+        //                         value: web3.utils.toWei('0.1', 'ether')
+        //                 }
+
+        //                 const o = {
+        //                         lid: 3
+        //                 }
+        //                 const tx = await sl.borrow(i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.borrower, value: i.value})
+        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
+        //         })
+
+        //         it('cannot send eth to empty liquidator address', async() => {
+        //                 const i = {
+        //                         lid: 3,
+        //                         liquidator: '0x0000000000000000000000000000000000000000',
+        //                         admin: root
+        //                 }
+        //                 await u.assertRevert(sl.liquidate(i.lid, i.liquidator, OFFCHAIN, {from: i.admin}))
+        //         })
+
+        //         it('only admin can call it', async() => {
+        //                 const i = {
+        //                         lid: 3,
+        //                         liquidator: liquidator,
+        //                         admin: root
+        //                 }
+        //                 await sl.liquidate(i.lid, i.liquidator, OFFCHAIN, {from: i.admin})
+        //         })
+
+        //         it('cannot call payoff then', async() => {
+        //                 const i = {
+        //                         lid: 3,
+        //                         borrower: borrower1
+        //                 }
+
+        //                 await u.increaseTime(1000)
+        //                 await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: i.borrower}))
+        //         })
+        // })
+
+
+        // describe('borrow by admin', () => {
+
+        //         it('init', async () => {
+        //                 const i = {
+        //                         principal: 1000,
+        //                         term: 1,
+        //                         closingWindow: 200,
+        //                         ethInterest: 360,
+        //                         ethPrice: 17630,
+        //                         borrower: borrower2,
+        //                         value: web3.utils.toWei('0.1', 'ether'),
+        //                         admin: root
+        //                 }
+
+        //                 const o = {
+        //                         lid: 4
+        //                 }
+        //                 const tx = await sl.borrowByAdmin(i.borrower, i.principal, i.term, i.closingWindow, i.ethInterest, i.ethPrice, OFFCHAIN, {from: i.admin, value: i.value})
+        //                 eq(o.lid, await oc(tx, "__borrow", "lid"))
+
+        //                 const loan = await sl.getOpenLoan(o.lid)
+        //                 eq(i.principal, loan[0].toNumber())
+        //                 eq(i.term, loan[1].toNumber())
+        //                 eq(i.borrower, loan[3])
+        //         })
+
+        // })
 })
