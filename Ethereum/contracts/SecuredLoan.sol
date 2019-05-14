@@ -65,6 +65,7 @@ contract SecuredLoan is Admin {
                 address borrower,
                 uint term, 
                 uint rate, 
+                uint collateral,
                 uint amount,
                 bytes32 offchain
         ) 
@@ -72,16 +73,16 @@ contract SecuredLoan is Admin {
                 onlyAdmin
         {
 
-                require(address(this).balance - stake > 0, "cannot init borrow");
+                require(collateral > 0 && collateral - (address(this).balance - stake) >= 0, "cannot init borrow");
                 Open memory o;
                 o.borrower = borrower;
                 o.term = term;
                 o.rate = rate;
                 o.amount = amount;
-                o.collateral = address(this).balance - stake;
+                o.collateral = collateral;
                 o.done = false;
                 opens.push(o);
-                stake = stake + address(this).balance;
+                stake = stake + collateral;
 
                 emit __borrow(opens.length - 1, o.collateral, offchain); 
         }

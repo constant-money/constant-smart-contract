@@ -403,6 +403,7 @@ contract("SecuredLoan", (accounts) => {
                                 rate: 10,
                                 amount: 100000, // 1000US
                                 admin: root,
+                                collateral: 1,
                         }
 
                         const o = {
@@ -410,8 +411,8 @@ contract("SecuredLoan", (accounts) => {
                                 collateral: 1,
                         }
 
-                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.amount, OFFCHAIN, {from: i.borrower}));
-                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.amount, OFFCHAIN, {from: i.admin});
+                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
+                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
                         eq(o.oid, await oc(tx, "__borrow", "oid"));
                 })
 
