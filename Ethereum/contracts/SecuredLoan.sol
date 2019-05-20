@@ -11,7 +11,7 @@ contract SecuredLoan is Admin {
         struct Loan {
                 address payable borrower;
                 address lender;
-                uint principal;
+                uint256 principal;
                 uint rate;
                 uint start;
                 uint end;
@@ -20,20 +20,20 @@ contract SecuredLoan is Admin {
         }
 
         struct Asset {
-                uint amount;
+                uint256 amount;
                 uint liquidation;
         }
 
         struct Open {
                 address borrower;
-                uint amount;
-                uint collateral;
+                uint256 amount;
+                uint256 collateral;
                 uint rate;
                 uint term;
                 bool done;
         }
 
-        uint private stake;
+        uint256 private stake;
 
         Loan[] private loans;
         Open[] private opens;
@@ -44,10 +44,10 @@ contract SecuredLoan is Admin {
         IERC20 private CONST;
 
         // events to track onchain (ethereum) and offchain (our database)
-        event __borrow(uint oid, uint collateral, bytes32 offchain);
-        event __cancel(uint oid, uint collateral, bytes32 offchain);
+        event __borrow(uint oid, uint256 collateral, bytes32 offchain);
+        event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
-        event __repay(uint lid, uint collateral, bool done, bytes32 offchain);
+        event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
         event __withdraw(bytes32 offchain);
 
 
@@ -66,15 +66,15 @@ contract SecuredLoan is Admin {
                 address borrower,
                 uint term, 
                 uint rate, 
-                uint collateral,
-                uint amount,
+                uint256 collateral,
+                uint256 amount,
                 bytes32 offchain
         ) 
                 public 
                 onlyAdmin
         {
 
-                require(collateral > 0 && collateral - (address(this).balance - stake) > 0 && address(this).balance > 0, "cannot init borrow");
+                require(collateral > 0 && (address(this).balance - stake) >= collateral && address(this).balance > 0, "cannot init borrow");
                 Open memory o;
                 o.borrower = borrower;
                 o.term = term;
@@ -93,8 +93,8 @@ contract SecuredLoan is Admin {
         function fill(
                 uint oid,
                 address lender,
-                uint principal,
-                uint collateral,
+                uint256 principal,
+                uint256 collateral,
                 uint term, 
                 uint rate, 
                 bool onchain,
@@ -168,10 +168,10 @@ contract SecuredLoan is Admin {
 
                 o.done = true;
                 address(uint160(o.borrower)).transfer(o.collateral);
-                o.collateral = 0;
                 stake = stake - o.collateral;
+                o.collateral = 0;
 
-                emit __cancel(oid, o.collateral, offchain); 
+                emit __cancel(oid, offchain); 
         }
 
         // withdraw remaning money for borrower

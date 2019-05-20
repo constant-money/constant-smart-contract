@@ -421,14 +421,14 @@ contract("SecuredLoan", (accounts) => {
                                 borrower: borrower1,
                                 term: 2678400,
                                 rate: 1000, // 10%
-                                amount: 100, // 1US
+                                amount: 1000, // 10US
                                 admin: root,
-                                collateral: 5800000000000000, // 0.058 ether
+                                collateral: web3.utils.toWei('0.1', 'ether'), // 0.1 ether
                         }
 
                         const o = {
                                 oid: 0,
-                                collateral: 5800000000000000, // 0.058 ether
+                                collateral: web3.utils.toWei('0.1', 'ether'), // 0.1 ether
                         }
 
                         await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
@@ -447,7 +447,7 @@ contract("SecuredLoan", (accounts) => {
                                 rate: 10,
                                 amount: 100000, // 1000US
                                 admin: root,
-                                collateral: 1,
+                                collateral: web3.utils.toWei('0.1', 'ether'),
                         }
 
                         await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin}));
@@ -464,7 +464,7 @@ contract("SecuredLoan", (accounts) => {
                                 oid: 0,
                                 lender: c.address,
                                 principal: 1000, // 10US
-                                collateral: 1,
+                                collateral: web3.utils.toWei('0.058', 'ether'),
                                 term: 1,
                                 rate: 10,
                                 onchain: false,
@@ -485,7 +485,7 @@ contract("SecuredLoan", (accounts) => {
                                 oid: 0,
                                 lender: c.address,
                                 principal: 100, // 1US
-                                collateral: 5800000000000000, // 0.058 ether
+                                collateral: web3.utils.toWei('0.058', 'ether'), // 0.058 ether
                                 term: 2678400,
                                 rate: 1000, // 10%
                                 onchain: false,
@@ -497,12 +497,35 @@ contract("SecuredLoan", (accounts) => {
                 })
 
                 it('fill 2st', async() => {
-                        
+                        const i = {
+                                oid: 0,
+                                lender: c.address,
+                                principal: 900, // 9US
+                                collateral: web3.utils.toWei('0.042', 'ether'), // 0.042 ether
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                        }
+
+                        await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
                         
                 })
 
                 it('cannot able to fill when full matched', async() => {
-                       
+                        const i = {
+                                oid: 0,
+                                lender: c.address,
+                                principal: 10, // 0.1US
+                                collateral: web3.utils.toWei('0.001', 'ether'), // 0.042 ether
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                        }
+
+                        await u.assertRevert(sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin}));
+
                 })
 
 
@@ -510,13 +533,25 @@ contract("SecuredLoan", (accounts) => {
 
         describe('withdraw remaining amount', () => {
 
+                it('borrow', async() => {
+                        
+                        
+                })
+
+                it('cancel', async() => {
+                        
+
+                })
+
+                it('withdraw', async() => {
+                        
+
+                })
+
         })
 
         describe('repay > borrower repays early', () => {
 
-                before(async () => {
-
-                })
 
         })
 
