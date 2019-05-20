@@ -45,9 +45,9 @@ contract SecuredLoan is Admin {
 
         // events to track onchain (ethereum) and offchain (our database)
         event __borrow(uint oid, uint collateral, bytes32 offchain);
-        event __cancel(uint oid, bytes32 offchain);
+        event __cancel(uint oid, uint collateral, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
-        event __repay(bytes32 offchain);
+        event __repay(uint lid, uint collateral, bool done, bytes32 offchain);
         event __withdraw(bytes32 offchain);
 
 
@@ -171,7 +171,7 @@ contract SecuredLoan is Admin {
                 o.collateral = 0;
                 stake = stake - o.collateral;
 
-                emit __cancel(oid, offchain); 
+                emit __cancel(oid, o.collateral, offchain); 
         }
 
         // withdraw remaning money for borrower
@@ -250,7 +250,7 @@ contract SecuredLoan is Admin {
                 }
 
                 stake = stake - l.collateral.amount;
-                emit __repay(offchain);
+                emit __repay(lid, l.collateral.amount, l.done, offchain);
         }
 
 
