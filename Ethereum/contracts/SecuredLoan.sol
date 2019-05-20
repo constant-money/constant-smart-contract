@@ -121,6 +121,7 @@ contract SecuredLoan is Admin {
                 l.start = now;
                 l.end = now + term * 1 seconds;
                 l.lender = lender;
+                l.borrower = address(uint160(o.borrower));
                 l.done = false;
                 loans.push(l);
 
