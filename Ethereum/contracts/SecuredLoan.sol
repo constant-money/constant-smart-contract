@@ -48,6 +48,7 @@ contract SecuredLoan is Admin {
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(bytes32 offchain);
+        event __withdraw(bytes32 offchain);
 
 
         function() external payable {}
@@ -73,7 +74,7 @@ contract SecuredLoan is Admin {
                 onlyAdmin
         {
 
-                require(collateral > 0 && collateral - (address(this).balance - stake) >= 0, "cannot init borrow");
+                require(collateral > 0 && collateral - (address(this).balance - stake) > 0 && address(this).balance > 0, "cannot init borrow");
                 Open memory o;
                 o.borrower = borrower;
                 o.term = term;
@@ -131,6 +132,18 @@ contract SecuredLoan is Admin {
                 emit __fill(loans.length - 1, offchain); 
         }
 
+        // admin pay gas for user
+        function cancelByAdmin(
+                uint oid,
+                bytes32 offchain
+        )
+                public
+                onlyAdmin
+        {
+                Open storage o = opens[oid];
+                _cancel(oid, o.borrower, offchain);
+        }
+
         // cancel an open order
         function cancel(
                 uint oid,
@@ -138,9 +151,19 @@ contract SecuredLoan is Admin {
         )       
                 public 
         {
+                _cancel(oid, msg.sender, offchain);
+        }
+
+        function _cancel(
+                uint oid,
+                address borrower,
+                bytes32 offchain
+        )
+                private
+        {
                 Open storage o = opens[oid];
 
-                require(msg.sender == o.borrower);
+                require(borrower == o.borrower);
                 require(!o.done && o.collateral > 0);
 
                 o.done = true;
@@ -149,6 +172,19 @@ contract SecuredLoan is Admin {
                 stake = stake - o.collateral;
 
                 emit __cancel(oid, offchain); 
+        }
+
+        // withdraw remaning money for borrower
+        function withdraw(
+                address payable borrower,
+                bytes32 offchain
+        )
+                public
+                onlyAdmin 
+        {
+                require(address(this).balance - stake > 0);
+                borrower.transfer(address(this).balance - stake);
+                emit __withdraw(offchain);
         }
 
         // pay gas for borrower
@@ -218,14 +254,14 @@ contract SecuredLoan is Admin {
         }
 
 
-        function loan(uint lid) public view returns (uint, uint, address, uint) {
+        function loan(uint lid) public view returns (uint, uint, address, uint, bool) {
                 Loan storage l = loans[lid];
-                return (l.principal, l.end, l.borrower, l.collateral.amount);
+                return (l.principal, l.end, l.borrower, l.collateral.amount, l.done);
         }
 
-        function open(uint oid) public view returns (uint, uint, uint, uint) {
+        function open(uint oid) public view returns (uint, uint, uint, uint, bool) {
                 Open storage o = opens[oid];
-                return (o.amount, o.rate, o.term, o.collateral);
+                return (o.amount, o.rate, o.term, o.collateral, o.done);
         }
 
         function principal(uint collateral) public view returns (uint) {

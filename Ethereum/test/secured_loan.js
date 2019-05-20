@@ -293,12 +293,13 @@ contract("SecuredLoan", (accounts) => {
 
                 it('deposit ether', async() => {
                         const i = {
-                                deposit: web3.utils.toWei('1.5', 'ether'),
+                                deposit: web3.utils.toWei('0.1', 'ether'),
                                 borrower: borrower1,
                         }
 
                         await sl.send(i.deposit, {from: i.borrower})
                 })
+
 
                 it('add oracle', async() => {
                         await or.addOracle(oracle1, OFFCHAIN, {from: root});
@@ -470,8 +471,12 @@ contract("SecuredLoan", (accounts) => {
                                 admin: account,
                         }
 
-                        await u.assertRevert(sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin}));
+                        const o = {
+                                borrower: borrower1,
+                        }
 
+                        await u.assertRevert(sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin}));
+                        
                 })
 
                 it('fill 1st', async() => {
@@ -503,6 +508,10 @@ contract("SecuredLoan", (accounts) => {
 
         })
 
+        describe('withdraw remaining amount', () => {
+
+        })
+
         describe('repay > borrower repays early', () => {
 
                 before(async () => {
@@ -515,27 +524,18 @@ contract("SecuredLoan", (accounts) => {
 
         describe('repay > borrower defaults', () => {
 
-                before(async () => {
-
-                })
 
         })
 
 
         describe('repay > collateral current drops', () => {
 
-                before(async () => {
-
-                })
-
         })
 
 
         describe('repay > collateral current go up (if value exceeds x%)', () => {
 
-                before(async () => {
-
-                })
+                
 
         })
 
