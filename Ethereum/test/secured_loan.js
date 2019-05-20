@@ -418,21 +418,24 @@ contract("SecuredLoan", (accounts) => {
                 it('borrower 1 create loan', async() => {
                         const i = {
                                 borrower: borrower1,
-                                term: 1,
-                                rate: 10,
-                                amount: 100000, // 1000US
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                amount: 100, // 1US
                                 admin: root,
-                                collateral: 1,
+                                collateral: 5800000000000000, // 0.058 ether
                         }
 
                         const o = {
                                 oid: 0,
-                                collateral: 1,
+                                collateral: 5800000000000000, // 0.058 ether
                         }
 
                         await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
                         const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
                         eq(o.oid, await oc(tx, "__borrow", "oid"));
+
+                        const collateral = await oc(tx, '__borrow', 'collateral');
+                        eq(o.collateral, collateral);
                 })
 
 
@@ -476,10 +479,10 @@ contract("SecuredLoan", (accounts) => {
                         const i = {
                                 oid: 0,
                                 lender: c.address,
-                                principal: 1000, // 10US
-                                collateral: 1,
-                                term: 1,
-                                rate: 10,
+                                principal: 100, // 1US
+                                collateral: 5800000000000000, // 0.058 ether
+                                term: 2678400,
+                                rate: 1000, // 10%
                                 onchain: false,
                                 admin: root,
                         }

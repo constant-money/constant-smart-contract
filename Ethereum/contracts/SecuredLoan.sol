@@ -105,10 +105,10 @@ contract SecuredLoan is Admin {
                 // processing order
                 Open storage o = opens[oid];
 
-                require(principal <= o.amount);
-                require(rate <= o.rate);
-                require(term >= o.term);
-                require(collateral <= o.collateral);
+                require(principal <= o.amount, "principal not match");
+                require(rate <= o.rate, "rate not match");
+                require(term >= o.term, "term not match");
+                require(collateral <= o.collateral, "collateral not match");
 
                 o.amount -= principal;
                 o.collateral -= collateral;
@@ -167,12 +167,11 @@ contract SecuredLoan is Admin {
         // if a borrower wants to call the contract directly
         function repay(
                 uint lid, 
-                bool onchain,
                 bytes32 offchain
         ) 
                 public 
         {
-                _repay(msg.sender, lid, onchain, offchain);
+                _repay(msg.sender, lid, true, offchain);
         }
 
 
@@ -221,6 +220,11 @@ contract SecuredLoan is Admin {
         function loan(uint lid) public view returns (uint, uint, address, uint) {
                 Loan storage l = loans[lid];
                 return (l.principal, l.end, l.borrower, l.collateral.amount);
+        }
+
+        function open(uint oid) public view returns (uint, uint, uint, uint) {
+                Open storage o = opens[oid];
+                return (o.amount, o.rate, o.term, o.collateral);
         }
 
         function principal(uint collateral) public view returns (uint) {
