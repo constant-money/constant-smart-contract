@@ -167,7 +167,7 @@ contract SecuredLoan is Admin {
                 require(!o.done && o.collateral > 0);
 
                 o.done = true;
-                msg.sender.transfer(o.collateral);
+                address(uint160(o.borrower)).transfer(o.collateral);
                 o.collateral = 0;
                 stake = stake - o.collateral;
 
