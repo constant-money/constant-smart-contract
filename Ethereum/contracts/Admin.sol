@@ -3,7 +3,7 @@ pragma solidity ^0.5;
 contract Admin { 
 
         address private superAdmin;
-        mapping(address => bool) private admin;
+        mapping(address => bool) public admin;
 
         constructor() public {
                 superAdmin = msg.sender;

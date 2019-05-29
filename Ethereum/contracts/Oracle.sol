@@ -36,7 +36,7 @@ contract Oracle is Admin {
          * @dev constructor that populates a bunch of default params
          */
         constructor() public {
-                size = 10;
+                size = 1;
                 frequency = 1 seconds;
         }
 

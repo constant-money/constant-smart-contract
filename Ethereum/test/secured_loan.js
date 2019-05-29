@@ -128,7 +128,7 @@ contract("Oracle", (accounts) => {
 
                 it('check params', async() => {
                         const o = {
-                                size: 10,
+                                size: 1,
                                 frequency: 1,
                         }
 
@@ -136,8 +136,8 @@ contract("Oracle", (accounts) => {
                         const size = tx[0].toNumber();
                         const frequency = tx[1].toNumber();
 
-                        eq(10, size);
-                        eq(1, frequency);
+                        eq(o.size, size);
+                        eq(o.frequency, frequency);
 
                 });
                 
@@ -285,9 +285,19 @@ contract("SecuredLoan", (accounts) => {
                         }
 
                         await c.purchase(c.address, i.value, OFFCHAIN, {from: i.root});
+                        await c.purchase(borrower1, 10000, OFFCHAIN, {from: i.root});
+                        await c.purchase(borrower2, 10000, OFFCHAIN, {from: i.root});
 
                         const bal = await c.balanceOf(c.address);
                         eq(o.value, bal.toNumber());
+                        eq(10000, await c.balanceOf(borrower1));
+                        eq(10000, await c.balanceOf(borrower2));
+
+                })
+
+                it('approve CONST', async () => {
+                        await c.approve(sl.address, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", { from: borrower1 });
+                        await c.approve(sl.address, "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", { from: borrower2 });
 
                 })
 
@@ -423,20 +433,16 @@ contract("SecuredLoan", (accounts) => {
                                 rate: 1000, // 10%
                                 amount: 1000, // 10US
                                 admin: root,
-                                collateral: web3.utils.toWei('0.1', 'ether'), // 0.1 ether
+                                collateral: web3.utils.toWei('0.1', 'ether'), 
                         }
 
                         const o = {
                                 oid: 0,
-                                collateral: web3.utils.toWei('0.1', 'ether'), // 0.1 ether
                         }
 
                         await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
                         const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
                         eq(o.oid, await oc(tx, "__borrow", "oid"));
-
-                        const collateral = await oc(tx, '__borrow', 'collateral');
-                        eq(o.collateral, collateral);
                 })
 
 
@@ -471,10 +477,6 @@ contract("SecuredLoan", (accounts) => {
                                 admin: account,
                         }
 
-                        const o = {
-                                borrower: borrower1,
-                        }
-
                         await u.assertRevert(sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin}));
                         
                 })
@@ -485,14 +487,20 @@ contract("SecuredLoan", (accounts) => {
                                 oid: 0,
                                 lender: c.address,
                                 principal: 100, // 1US
-                                collateral: web3.utils.toWei('0.058', 'ether'), // 0.058 ether
+                                collateral: web3.utils.toWei('0.058', 'ether'),
                                 term: 2678400,
                                 rate: 1000, // 10%
                                 onchain: false,
                                 admin: root,
                         }
 
-                        await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
+                        const o = {
+                                lid: 0,
+                                borrower: borrower1,
+                        }
+
+                        const tx = await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
+                        eq(o.lid, await oc(tx, '__fill', 'lid'));
                         
                 })
 
@@ -501,14 +509,20 @@ contract("SecuredLoan", (accounts) => {
                                 oid: 0,
                                 lender: c.address,
                                 principal: 900, // 9US
-                                collateral: web3.utils.toWei('0.042', 'ether'), // 0.042 ether
+                                collateral: web3.utils.toWei('0.042', 'ether'),
                                 term: 2678400,
                                 rate: 1000, // 10%
                                 onchain: false,
                                 admin: root,
                         }
 
-                        await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
+                        const o = {
+                                lid: 1,
+                                borrower: borrower1,
+                        }
+
+                        const tx = await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
+                        eq(o.lid, await oc(tx, '__fill', 'lid'));
                         
                 })
 
@@ -517,7 +531,7 @@ contract("SecuredLoan", (accounts) => {
                                 oid: 0,
                                 lender: c.address,
                                 principal: 10, // 0.1US
-                                collateral: web3.utils.toWei('0.001', 'ether'), // 0.042 ether
+                                collateral: web3.utils.toWei('0.001', 'ether'),
                                 term: 2678400,
                                 rate: 1000, // 10%
                                 onchain: false,
@@ -533,44 +547,248 @@ contract("SecuredLoan", (accounts) => {
 
         describe('withdraw remaining amount', () => {
 
+                before(async () => {
+                        const i = {
+                                deposit: web3.utils.toWei('0.1', 'ether'),
+                                borrower: borrower2,
+                        }
+
+                        const o = {
+                                balance: web3.utils.toWei('0.2', 'ether'), // 0.1 borrower1 + 0.1 borrower2
+                        }
+
+                        await sl.send(i.deposit, {from: i.borrower});
+                        const balance = await web3.eth.getBalance(sl.address);
+                        
+                        eq(o.balance, balance);
+                })
+
                 it('borrow', async() => {
                         
-                        
+                        const i = {
+                                borrower: borrower1,
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                amount: 1000, // 10US
+                                admin: root,
+                                collateral: web3.utils.toWei('0.09', 'ether'),
+                        }
+
+                        const o = {
+                                oid: 1,
+                        }
+
+                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
+                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
+                        eq(o.oid, await oc(tx, "__borrow", "oid"));
+
                 })
 
                 it('cancel', async() => {
-                        
 
+                        const i = {
+                                oid: 1,
+                                borrower: borrower1,
+                        }
+
+                        const o = {
+                                balance: web3.utils.toWei('0.11', 'ether'),
+                        }
+
+                        await sl.cancel(i.oid, OFFCHAIN, {from: i.borrower});
+                        const balance = await web3.eth.getBalance(sl.address);
+
+                        eq(o.balance, balance);
                 })
 
                 it('withdraw', async() => {
                         
+                        const i = {
+                                borrower: borrower2,
+                                admin: root,
+                        }
 
+                        const o = {
+                                balance: web3.utils.toWei('0.1', 'ether'),
+                        }
+
+                        await u.assertRevert(sl.withdraw(i.borrower, OFFCHAIN, {from: i.borrower}));
+
+                        await sl.withdraw(i.borrower, OFFCHAIN, {from: i.admin});
+                        const balance = await web3.eth.getBalance(sl.address);
+                        eq(o.balance, balance);
+                })
+
+
+                it('cannot fill anymore', async() => {
+                        const i = {
+                                oid: 1,
+                                lender: c.address,
+                                principal: 10, // 0.1US
+                                collateral: web3.utils.toWei('0.001', 'ether'),
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                        }
+
+                        await u.assertRevert(sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin}));
                 })
 
         })
 
-        describe('repay > borrower repays early', () => {
+        describe('1. repay > borrower defaults', () => {
+
+                before(async () => {
+                        const i = {
+                                deposit: web3.utils.toWei('0.5', 'ether'),
+                                borrower: borrower1,
+                        }
+
+                        const o = {
+                                balance: web3.utils.toWei('0.6', 'ether'), // 0.2 borrower1
+                        }
+
+                        await sl.send(i.deposit, {from: i.borrower});
+                        const balance = await web3.eth.getBalance(sl.address);
+                        
+                        eq(o.balance, balance);
+                })
+
+
+                it('borrower1 init borrow', async() => {
+
+                        const i = {
+                                borrower: borrower1,
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                amount: 3000, // 30US
+                                admin: root,
+                                collateral: web3.utils.toWei('0.3', 'ether'),
+                        }
+
+                        const o = {
+                                oid: 2,
+                        }
+
+                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
+                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
+                        eq(o.oid, await oc(tx, "__borrow", "oid"));
+
+                })
+
+
+                it('fill order', async () => {
+                        const i = {
+                                oid: 2,
+                                lender: c.address,
+                                principal: 1000, // 10US
+                                collateral: web3.utils.toWei('0.1', 'ether'),
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                        }
+
+                        const o = {
+                                lid: 2,
+                        }
+
+                        const tx = await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
+                        eq(o.lid, await oc(tx, "__fill", "lid"));
+
+                })
+
+
+                it('repay', async () => {
+                        const i = {
+                                borrower: borrower1,
+                                lid: 2,
+                                onchain: false,
+                                admin: root,
+                        }
+        
+                        u.increaseTime(10001)
+                        const tx = await sl.repayByAdmin(i.borrower, i.lid, i.onchain, OFFCHAIN, {from: i.admin});
+                        console.log(await oc(tx, "__debug", "a").toNumber());
+                        console.log(await oc(tx, "__debug", "b").toNumber());
+                        console.log(await oc(tx, "__debug", "c").toNumber());
+                })
+                
+        })
+
+
+        describe('2. repay > collateral current drops', () => {
 
 
         })
 
 
-
-        describe('repay > borrower defaults', () => {
-
-
-        })
-
-
-        describe('repay > collateral current drops', () => {
-
-        })
-
-
-        describe('repay > collateral current go up (if value exceeds x%)', () => {
+        describe('3. collateral current go up to legendary', () => {
 
                 
+
+        })
+
+
+        describe('payoff', () => {
+
+                it('fill', async () => {
+
+                        const i = {
+                                oid: 2,
+                                lender: c.address,
+                                principal: 100, // 1US
+                                collateral: web3.utils.toWei('0.01', 'ether'),
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                        }
+
+
+                        const o = {
+                                lid: 3,
+                        }
+
+
+                        const tx = await sl.fill(i.oid, i.lender, i.principal, i.collateral, i.term, i.rate, i.onchain, OFFCHAIN, {from: i.admin});
+                        eq(o.lid, await oc(tx, "__fill", "lid"));
+                })
+
+
+                it('admin call payoff > wrong borrower address', async () => {
+
+                        const i = {
+                                lid: 3,
+                                borrower: borrower2,
+                                admin: root,
+                        }
+
+                        await u.assertRevert(sl.payoffByAdmin(i.lid, i.borrower, false, OFFCHAIN, {from: i.admin}));
+                        await u.assertRevert(sl.payoffByAdmin(i.lid, i.borrower, true, OFFCHAIN, {from: i.admin}));
+                })
+
+
+                it('borrower call payoff', async () => {
+
+                        const i = {
+                                lid: 3,
+                                borrower: borrower1,
+                        }
+
+                        const o = {
+                                fee: 500,
+                        }
+
+                        u.increaseTime(10000);
+
+                        await u.assertRevert(sl.payoff(i.lid, OFFCHAIN, {from: borrower2}));
+                        
+                        const tx = await sl.payoff(i.lid, OFFCHAIN, {from: i.borrower});
+                        const fee = await oc(tx, "__payoff", "fee");
+                        eq(o.fee, fee);
+                })
 
         })
 

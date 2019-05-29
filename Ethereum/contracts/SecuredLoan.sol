@@ -21,6 +21,7 @@ contract SecuredLoan is Admin {
 
         struct Asset {
                 uint256 amount;
+                uint256 ethPrice;
                 uint liquidation;
         }
 
@@ -44,12 +45,14 @@ contract SecuredLoan is Admin {
         IERC20 private CONST;
 
         // events to track onchain (ethereum) and offchain (our database)
-        event __borrow(uint oid, uint256 collateral, bytes32 offchain);
+        event __borrow(uint oid, bytes32 offchain);
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
         event __withdraw(bytes32 offchain);
+        event __payoff(uint lid, uint fee, bytes32 offchain);
 
+        event __debug(uint256 a, uint256 b, uint256 c);
 
         function() external payable {}
 
@@ -85,7 +88,7 @@ contract SecuredLoan is Admin {
                 opens.push(o);
                 stake = stake + collateral;
 
-                emit __borrow(opens.length - 1, o.collateral, offchain); 
+                emit __borrow(opens.length - 1, offchain); 
         }
 
         
@@ -117,7 +120,7 @@ contract SecuredLoan is Admin {
                 // add a new matched loan
                 Loan memory l;
                 l.principal = principal;
-                l.collateral = Asset(collateral, policy.current("ethLiquidation"));
+                l.collateral = Asset(collateral, oracle.current("ethPrice"), policy.current("ethLiquidation"));
                 l.rate = rate;
                 l.start = now;
                 l.end = now + term * 1 seconds;
@@ -211,12 +214,10 @@ contract SecuredLoan is Admin {
                 _repay(msg.sender, lid, true, offchain);
         }
 
-
         // repay a secured loan. there are 3 ways:
-        // 1. borrower repays early
-        // 2. borrower defaults (then anyone can repay and get the over-collateral)
-        // 3. collateral current drops (then liquidation kicks in) 
-        // 4. collateral current go up (if value exceeds x%)
+        // 1. borrower defaults (then anyone can repay and get the over-collateral)
+        // 2. collateral current drops (then liquidation kicks in) 
+        // 3. collateral current go up to legendary
         // 
         // note that the repayer must approve the contract to spend its Const first.
         function _repay(
@@ -230,27 +231,103 @@ contract SecuredLoan is Admin {
                 Loan storage l = loans[lid];
                 require(!l.done);
 
+
+                uint256 payment = l.principal * (1 + l.rate/100);
+                bool liquidated = policy.current("ethLiquidation") * oracle.current("ethPrice") <= l.collateral.ethPrice;
+                bool legendary = policy.current("ethLegendary") * l.collateral.ethPrice <= oracle.current("ethPrice");
+
+                require(now >= l.end || liquidated || legendary);
+
+                if (now >= l.end) {
+                        l.done = true;
+                        if (onchain) CONST.transferFrom(repayer, l.lender, payment);
+
+                        if (repayer == l.borrower) {
+                                repayer.transfer(l.collateral.amount);
+                        } else {
+                                uint amt = payment/oracle.current("ethPrice") * (1+policy.current("ethIncentive"));
+                                repayer.transfer(amt);
+                                l.borrower.transfer(l.collateral.amount - amt);
+                        }
+
+                        stake = stake - l.collateral.amount;
+        
+                } else if(liquidated) {
+                        l.done = true;
+
+                        require(admin[msg.sender]);
+                        repayer.transfer(l.collateral.amount);
+
+                        stake = stake - l.collateral.amount;
+
+                } else if(legendary) {
+                        require(repayer == l.borrower);
+
+                }
+                
+                emit __repay(lid, l.collateral.amount, l.done, offchain);
+        }
+
+
+        // admin pay gas for user
+        function payoffByAdmin(
+                uint lid,
+                address payable borrower,
+                bool onchain,
+                bytes32 offchain
+        ) 
+                public
+                onlyAdmin
+        {
+                _payoff(lid, borrower, onchain, offchain);
+        }
+
+
+        // borrower repays early
+        // 
+        // note that the borrower must approve the contract to spend its Const first.
+        function payoff(
+                uint lid,
+                bytes32 offchain
+        )
+                public
+        {
+                _payoff(lid, msg.sender, true, offchain);
+        }
+
+
+        function _payoff(
+                uint lid,
+                address payable borrower,
+                bool onchain,
+                bytes32 offchain
+        )
+                private
+        {
+                Loan storage l = loans[lid];
+                require(!l.done && now < l.end && l.borrower == borrower);
+
                 l.done = true;
 
-                // liquidate if collateral current is approaching within 10% of principle + interest
-                uint payment = l.principal * (10000 + l.rate * ((now < l.end? now: l.end) - l.start)) / 100;
-                uint collateralValue = oracle.current("ethPrice") * l.collateral.amount;
-                bool liquidated = 10000 * collateralValue < payment * (10000 + l.collateral.liquidation); 
+                uint fee = 0;
+                uint256 payment = 0;
+                if (onchain) {
+                        fee = ((now - l.start) / (l.end - l.start)) * 10000;
 
-                require(repayer == l.borrower || now > l.end || liquidated);
+                        if (fee >= policy.current("ethPayOffThreshold")) {
+                                fee = l.rate;
+                        } else {
+                                fee = fee + (l.rate - fee)/2;
+                        }
 
-                if (onchain) CONST.transferFrom(repayer, l.lender, payment); 
-
-                if (repayer == l.borrower) {
-                        repayer.transfer(l.collateral.amount);
-                } else {
-                        uint amt = payment/oracle.current("ethPrice") * (1+policy.current("ethIncentive"));
-                        repayer.transfer(amt);
-                        l.borrower.transfer(l.collateral.amount - amt);
+                        payment = l.principal * (1 + fee/100);
+                        CONST.transferFrom(borrower, l.lender, payment);
                 }
 
+                borrower.transfer(l.collateral.amount);
+
                 stake = stake - l.collateral.amount;
-                emit __repay(lid, l.collateral.amount, l.done, offchain);
+                emit __payoff(lid, fee, offchain);
         }
 
 
@@ -259,10 +336,12 @@ contract SecuredLoan is Admin {
                 return (l.principal, l.end, l.borrower, l.collateral.amount, l.done);
         }
 
+
         function open(uint oid) public view returns (uint, uint, uint, uint, bool) {
                 Open storage o = opens[oid];
                 return (o.amount, o.rate, o.term, o.collateral, o.done);
         }
+
 
         function principal(uint collateral) public view returns (uint) {
                 uint ethPrice = oracle.current("ethPrice");
