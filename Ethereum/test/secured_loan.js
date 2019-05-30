@@ -728,6 +728,10 @@ contract("SecuredLoan", (accounts) => {
 
         describe('2. repay > collateral current drops', () => {
 
+                it('fill', async () => {
+
+                        
+                })
 
         })
 
