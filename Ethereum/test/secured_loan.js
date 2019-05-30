@@ -701,6 +701,7 @@ contract("SecuredLoan", (accounts) => {
 
 
                 it('repay', async () => {
+
                         const i = {
                                 borrower: borrower1,
                                 lid: 2,
@@ -708,13 +709,20 @@ contract("SecuredLoan", (accounts) => {
                                 admin: root,
                         }
         
-                        u.increaseTime(10001)
+                        await u.assertRevert(sl.repayByAdmin(i.borrower, i.lid, i.onchain, OFFCHAIN, {from: i.admin}));
+
+                        const balBefore = await web3.eth.getBalance(i.borrower);
+
+                        u.increaseTime(2678400)
                         const tx = await sl.repayByAdmin(i.borrower, i.lid, i.onchain, OFFCHAIN, {from: i.admin});
-                        console.log(await oc(tx, "__debug", "a").toNumber());
-                        console.log(await oc(tx, "__debug", "b").toNumber());
-                        console.log(await oc(tx, "__debug", "c").toNumber());
+                        const collateralAmt = await oc(tx, "__repay", "collateral");
+                        const balAfter = await web3.eth.getBalance(i.borrower);
+
+
+                        eq(parseFloat(web3.utils.fromWei(balAfter, 'ether')), parseFloat(web3.utils.fromWei(collateralAmt, 'ether')) + parseFloat(web3.utils.fromWei(balBefore, 'ether')));
+                        
+
                 })
-                
         })
 
 
