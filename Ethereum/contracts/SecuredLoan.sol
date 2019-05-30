@@ -49,7 +49,9 @@ contract SecuredLoan is Admin {
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
-        event __liquidate(bytes32 offchain);
+        event __liquidate(uint lid, bytes32 offchain);
+        event __riseup(uint lid, uint256 amt, bytes32 offchain);
+
         event __withdraw(bytes32 offchain);
         event __payoff(uint lid, uint fee, bytes32 offchain);
 
@@ -173,7 +175,7 @@ contract SecuredLoan is Admin {
                 stake = stake - o.collateral;
                 o.collateral = 0;
 
-                emit __cancel(oid, offchain); 
+                emit __cancel(oid, offchain);
         }
 
         // withdraw remaning money for borrower
@@ -182,7 +184,7 @@ contract SecuredLoan is Admin {
                 bytes32 offchain
         )
                 public
-                onlyAdmin 
+                onlyAdmin
         {
                 require(address(this).balance - stake > 0);
                 borrower.transfer(address(this).balance - stake);
@@ -191,13 +193,13 @@ contract SecuredLoan is Admin {
 
         // pay gas for borrower
         function repayByAdmin(
-                address payable repayer, 
-                uint lid, 
+                address payable repayer,
+                uint lid,
                 bool onchain,
                 bytes32 offchain
-        )       
-                public 
-                onlyAdmin 
+        )
+                public
+                onlyAdmin
         {
                 _repay(repayer, lid, onchain, offchain);
         }
@@ -205,10 +207,10 @@ contract SecuredLoan is Admin {
 
         // if a borrower wants to call the contract directly
         function repay(
-                uint lid, 
+                uint lid,
                 bytes32 offchain
-        ) 
-                public 
+        )
+                public
         {
                 _repay(msg.sender, lid, true, offchain);
         }
@@ -218,12 +220,12 @@ contract SecuredLoan is Admin {
         // 
         // note that the repayer must approve the contract to spend its Const first.
         function _repay(
-                address payable repayer, 
-                uint lid, 
+                address payable repayer,
+                uint lid,
                 bool onchain,
                 bytes32 offchain
-        ) 
-                private 
+        )
+                private
         {
                 Loan storage l = loans[lid];
                 require(!l.done && now >= l.end);
@@ -271,7 +273,7 @@ contract SecuredLoan is Admin {
                 repayer.transfer(l.collateral.amount);
                 stake = stake - l.collateral.amount;
 
-                emit __liquidate(offchain);
+                emit __liquidate(lid, offchain);
         }
 
 
@@ -317,7 +319,16 @@ contract SecuredLoan is Admin {
                 require(!l.done && l.borrower == repayer && legendary);
 
 
+                uint256 amt = l.collateral.amount * oracle.current("ethPrice") / l.collateral.ethPrice;
+                uint256 extraAmt = amt - l.collateral.amount;
 
+                repayer.transfer(extraAmt);
+                l.collateral.amount = l.collateral.amount - extraAmt;
+                l.collateral.ethPrice = oracle.current("ethPrice");
+
+                stake = stake - extraAmt;
+
+                emit __riseup(lid, extraAmt, offchain);
         }
 
 
@@ -363,7 +374,6 @@ contract SecuredLoan is Admin {
                 l.done = true;
 
                 uint fee = 0;
-                uint256 payment = 0;
                 if (onchain) {
                         fee = ((now - l.start) / (l.end - l.start)) * 10000;
 
@@ -373,7 +383,7 @@ contract SecuredLoan is Admin {
                                 fee = fee + (l.rate - fee)/2;
                         }
 
-                        payment = l.principal * (1 + fee/100);
+                        uint256 payment = (l.rate + 10000) * l.principal / 10000;
                         CONST.transferFrom(borrower, l.lender, payment);
                 }
 
