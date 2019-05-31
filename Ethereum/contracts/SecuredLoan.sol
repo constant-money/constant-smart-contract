@@ -112,7 +112,7 @@ contract SecuredLoan is Admin {
 
                 require(principal <= o.amount, "principal not match");
                 require(rate <= o.rate, "rate not match");
-                require(term >= o.term, "term not match");
+                require(term <= o.term, "term not match");
                 require(collateral <= o.collateral, "collateral not match");
 
                 o.amount -= principal;
