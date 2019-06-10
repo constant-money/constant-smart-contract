@@ -1,12 +1,12 @@
 pragma solidity ^0.5;
 
-import './Admin.sol';
+import './ILoanAdmin.sol';
 import './ISimplePolicy.sol';
 import './IOracle.sol';
 import 'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol';
 
 // a factory contract of all secured loans on the constant p2p lending platform
-contract SecuredLoan is Admin { 
+contract SecuredLoan { 
 
         struct Loan {
                 address payable borrower;
@@ -42,10 +42,12 @@ contract SecuredLoan is Admin {
         // interface to external contracts
         ISimplePolicy private policy;
         IOracle private oracle;
+        ILoanAdmin private loanAdmin;
         IERC20 private CONST;
 
         // events to track onchain (ethereum) and offchain (our database)
         event __borrow(uint oid, bytes32 offchain);
+        event __topupCollateral(uint oid, uint256 amount, uint256 stake, bytes32 offchain);
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
@@ -58,12 +60,17 @@ contract SecuredLoan is Admin {
         function() external payable {}
 
 
-        constructor(address _policy, address _oracle, address _constant) public {
+        constructor(address _policy, address _oracle, address _constant, address _admin) public {
                 policy = ISimplePolicy(_policy);
                 oracle = IOracle(_oracle);
+                loanAdmin = ILoanAdmin(_admin);
                 CONST = IERC20(_constant);
         }
 
+        modifier onlyAdmin() {
+                require(loanAdmin.isAdmin(msg.sender));
+                _;
+        }
 
         // take a secured loan with ETH as collateral
         function borrow(
@@ -137,6 +144,48 @@ contract SecuredLoan is Admin {
         }
 
         // admin pay gas for user
+        function topupCollateralByAdmin(
+                uint oid,
+                uint256 amount,
+                bytes32 offchain
+        )
+                public
+                onlyAdmin
+        {
+                Open storage o = opens[oid];
+                _topupCollateral(oid, o.borrower, amount, offchain);
+        }
+
+        // topup an open order
+        function topupCollateral(
+                uint oid,
+                uint256 amount,
+                bytes32 offchain
+        )       
+                public 
+        {
+                _topupCollateral(oid, msg.sender, amount, offchain);
+        }
+
+        function _topupCollateral(
+                uint oid,
+                address borrower,
+                uint256 amount,
+                bytes32 offchain
+        )
+                private
+        {
+                Open storage o = opens[oid];
+
+                require(borrower == o.borrower);
+                require(!o.done && o.collateral > 0 && amount > 0 && (address(this).balance - stake) >= amount && address(this).balance > 0, "cannot init borrow");
+                o.collateral +=amount;
+                stake += amount;
+
+                emit __topupCollateral(oid, amount,stake, offchain);
+        }
+
+        // admin pay gas for user
         function cancelByAdmin(
                 uint oid,
                 bytes32 offchain
@@ -181,13 +230,15 @@ contract SecuredLoan is Admin {
         // withdraw remaning money for borrower
         function withdraw(
                 address payable borrower,
+                uint256 amount,
                 bytes32 offchain
+
         )
                 public
                 onlyAdmin
         {
-                require(address(this).balance - stake > 0);
-                borrower.transfer(address(this).balance - stake);
+                require(amount>0 && address(this).balance - stake >= amount);
+                borrower.transfer(amount);
                 emit __withdraw(offchain);
         }
 

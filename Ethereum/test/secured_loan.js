@@ -257,6 +257,7 @@ contract("SecuredLoan", (accounts) => {
         const oracle1 = accounts[1]
         const borrower1 = accounts[2]
         const borrower2 = accounts[3]
+        const borrower3 = accounts[6]
         const admin1 = accounts[4]
         const account = accounts[5]
 
@@ -348,67 +349,6 @@ contract("SecuredLoan", (accounts) => {
 
         })
 
-
-        describe('add admin', () => {
-
-                it('failed if address is empty', async() => {
-                        const i = {
-                                address: '0x0000000000000000000000000000000000000000',
-                                admin: root
-                        }
-
-                        await u.assertRevert(sl.addAdmin(i.address, {from: i.admin}))
-                });
-
-
-                it('borrower call it', async() => {
-                        const i = {
-                                address: admin1,
-                                admin: borrower1
-                        }
-                        await u.assertRevert(sl.addAdmin(i.address, {from: i.admin}))
-                });
-
-                it('only admin can call it', async() => {
-                        const i = {
-                                address: admin1,
-                                admin: root
-                        }
-                        await sl.addAdmin(i.address, {from: i.admin})
-                });
-
-        })
-
-
-        describe('remove admin', () => {
-
-                it('failed if address is empty', async() => {
-                        const i = {
-                                address: '0x0000000000000000000000000000000000000000',
-                                admin: root
-                        }
-
-                        await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
-                });
-
-
-                it('borrower call it', async() => {
-                        const i = {
-                                address: admin1,
-                                admin: borrower1
-                        }
-                        await u.assertRevert(sl.removeAdmin(i.address, {from: i.admin}))
-                });
-
-                it('only admin can call it', async() => {
-                        const i = {
-                                address: admin1,
-                                admin: root
-                        }
-                        await sl.removeAdmin(i.address, {from: i.admin})
-                });
-
-        })
 
         describe('borrow', () => {
 
@@ -612,9 +552,9 @@ contract("SecuredLoan", (accounts) => {
                                 balance: web3.utils.toWei('0.1', 'ether'),
                         }
 
-                        await u.assertRevert(sl.withdraw(i.borrower, OFFCHAIN, {from: i.borrower}));
+                        await u.assertRevert(sl.withdraw(i.borrower,web3.utils.toWei('1', 'ether'), OFFCHAIN, {from: i.borrower}));
 
-                        await sl.withdraw(i.borrower, OFFCHAIN, {from: i.admin});
+                        await sl.withdraw(i.borrower,web3.utils.toWei('0.01', 'ether'), OFFCHAIN, {from: i.admin});
                         const balance = await web3.eth.getBalance(sl.address);
                         eq(o.balance, balance);
                 })
@@ -803,5 +743,48 @@ contract("SecuredLoan", (accounts) => {
                 })
 
         })
+
+        describe('topup to open loan', () => {
+
+                it('get principal', async() => {
+                        const i = {
+                                collateral: 1,
+                        }
+
+                        const o = {
+                                value: 13065, // 130.65US
+                        }
+
+                        const tx = await sl.principal(i.collateral, {from: root});
+                        eq(o.value, tx.toNumber());
+
+                })
+
+                it('borrower 3 create & topup to loan', async() => {
+                        const i = {
+                                borrower: borrower3,
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                amount: 1000, // 10US
+                                admin: root,
+                                collateral: web3.utils.toWei('0.1', 'ether'), 
+                        }
+
+                        const o = {
+                                oid: 3,
+                        }
+
+                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
+                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
+                        eq(o.oid, await oc(tx, "__borrow", "oid"));
+
+                        const tx1 = await sl.topupCollateralByAdmin(o.oid, i.collateral, OFFCHAIN, {from: i.admin});
+                        eq(o.oid, await oc(tx1, "__topupCollateral", "oid"));
+                        console.log(parseFloat(web3.utils.fromWei((await oc(tx1, "__topupCollateral", "stake")))));
+
+                })
+
+
+        })    
 
 })
