@@ -47,7 +47,7 @@ contract SecuredLoan {
 
         // events to track onchain (ethereum) and offchain (our database)
         event __borrow(uint oid, bytes32 offchain);
-        event __topupCollateral(uint oid, uint256 amount, uint256 stake, bytes32 offchain);
+        event __topupCollateral(uint lid, uint256 amount, uint256 stake, bytes32 offchain);
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
