@@ -767,19 +767,43 @@ contract("SecuredLoan", (accounts) => {
                                 rate: 1000, // 10%
                                 amount: 1000, // 10US
                                 admin: root,
-                                collateral: web3.utils.toWei('0.1', 'ether'), 
+                                collateral: web3.utils.toWei('0.2', 'ether'), 
                         }
 
                         const o = {
                                 oid: 3,
                         }
 
+                        const fill = {
+                                oid: 3,
+                                lender: c.address,
+                                principal: 100, // 1US
+                                collateral: web3.utils.toWei('0.01', 'ether'),
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                        }
+
+                        const l = {
+                                lid: 4,
+                                borrower: borrower3,
+                        }
+
+
                         await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
                         const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
                         eq(o.oid, await oc(tx, "__borrow", "oid"));
 
-                        const tx1 = await sl.topupCollateralByAdmin(o.oid, i.collateral, OFFCHAIN, {from: i.admin});
-                        eq(o.oid, await oc(tx1, "__topupCollateral", "oid"));
+                        const balance = await web3.eth.getBalance(sl.address);
+
+                        const txf = await sl.fill(fill.oid, fill.lender, fill.principal, fill.collateral, fill.term, fill.rate, fill.onchain, OFFCHAIN, {from: i.admin});
+                        eq(l.lid, await oc(txf, '__fill', 'lid'));
+
+                        console.log("---------------------------"+balance);
+
+                        const tx1 = await sl.topupCollateralByAdmin(l.lid, fill.collateral, OFFCHAIN, {from: i.admin});
+                        eq(l.lid, await oc(tx1, "__topupCollateral", "lid"));
                         console.log(parseFloat(web3.utils.fromWei((await oc(tx1, "__topupCollateral", "stake")))));
 
                 })

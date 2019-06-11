@@ -145,44 +145,19 @@ contract SecuredLoan {
 
         // admin pay gas for user
         function topupCollateralByAdmin(
-                uint oid,
+                uint lid,
                 uint256 amount,
                 bytes32 offchain
         )
                 public
                 onlyAdmin
         {
-                Open storage o = opens[oid];
-                _topupCollateral(oid, o.borrower, amount, offchain);
-        }
-
-        // topup an open order
-        function topupCollateral(
-                uint oid,
-                uint256 amount,
-                bytes32 offchain
-        )       
-                public 
-        {
-                _topupCollateral(oid, msg.sender, amount, offchain);
-        }
-
-        function _topupCollateral(
-                uint oid,
-                address borrower,
-                uint256 amount,
-                bytes32 offchain
-        )
-                private
-        {
-                Open storage o = opens[oid];
-
-                require(borrower == o.borrower);
-                require(!o.done && o.collateral > 0 && amount > 0 && (address(this).balance - stake) >= amount && address(this).balance > 0, "cannot init borrow");
-                o.collateral +=amount;
+                Loan storage l = loans[lid];
+                require(!l.done && now <= l.end && l.collateral.amount > 0 && amount > 0 && (address(this).balance - stake) >= amount && address(this).balance > 0, "cannot topupCollateral");
+                l.collateral.amount += amount;
                 stake += amount;
 
-                emit __topupCollateral(oid, amount,stake, offchain);
+                emit __topupCollateral(lid, l.collateral.amount,stake, offchain);
         }
 
         // admin pay gas for user
