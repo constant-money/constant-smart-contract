@@ -659,7 +659,7 @@ contract("SecuredLoan", (accounts) => {
                         const balAfter = await web3.eth.getBalance(i.borrower);
 
 
-                        eq(parseFloat(web3.utils.fromWei(balAfter, 'ether')), parseFloat(web3.utils.fromWei(collateralAmt, 'ether')) + parseFloat(web3.utils.fromWei(balBefore, 'ether')));
+                        eq(Math.round(parseFloat(web3.utils.fromWei(balAfter, 'ether'))*100)/100, Math.round(parseFloat(web3.utils.fromWei(collateralAmt, 'ether'))*100 + parseFloat(web3.utils.fromWei(balBefore, 'ether')*100))/100);
                         
 
                 })
@@ -746,20 +746,6 @@ contract("SecuredLoan", (accounts) => {
 
         describe('topup to open loan', () => {
 
-                it('get principal', async() => {
-                        const i = {
-                                collateral: 1,
-                        }
-
-                        const o = {
-                                value: 13065, // 130.65US
-                        }
-
-                        const tx = await sl.principal(i.collateral, {from: root});
-                        eq(o.value, tx.toNumber());
-
-                })
-
                 it('borrower 3 create & topup to loan', async() => {
                         const i = {
                                 borrower: borrower3,
@@ -767,7 +753,7 @@ contract("SecuredLoan", (accounts) => {
                                 rate: 1000, // 10%
                                 amount: 1000, // 10US
                                 admin: root,
-                                collateral: web3.utils.toWei('0.2', 'ether'), 
+                                collateral: web3.utils.toWei('0.1', 'ether'), 
                         }
 
                         const o = {

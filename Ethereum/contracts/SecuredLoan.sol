@@ -47,7 +47,7 @@ contract SecuredLoan {
 
         // events to track onchain (ethereum) and offchain (our database)
         event __borrow(uint oid, bytes32 offchain);
-        event __topupCollateral(uint oid, uint256 amount, uint256 stake, bytes32 offchain);
+        event __topupCollateral(uint lid, uint256 amount, uint256 stake, bytes32 offchain);
         event __cancel(uint oid, bytes32 offchain);
         event __fill(uint lid, bytes32 offchain);
         event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
@@ -104,7 +104,7 @@ contract SecuredLoan {
         function fill(
                 uint oid,
                 address lender,
-                uint256 principal,
+                uint256 principal,//match amount
                 uint256 collateral,
                 uint term, 
                 uint rate, 
@@ -260,11 +260,17 @@ contract SecuredLoan {
                 uint256 payment = (l.rate + 10000) * l.principal / 10000;
 
                 l.done = true;
-                if (onchain) CONST.transferFrom(repayer, l.lender, payment);
-
+                //penalty when repay over 1 day
+                if (onchain &&  l.end <= (now + 86400)) {
+                        uint amt = payment * policy.current("ethIncentive")/10000;
+                        CONST.transferFrom(repayer, l.lender, payment+amt);
+                }else if (onchain){
+                        CONST.transferFrom(repayer, l.lender, payment);
+                }
                 if (repayer == l.borrower) {
                         repayer.transfer(l.collateral.amount);
                 } else {
+                        //payment by eth & percentage of penalty per payment by eth
                         uint amt = payment/oracle.current("ethPrice") * (1+policy.current("ethIncentive"));
                         repayer.transfer(amt);
                         l.borrower.transfer(l.collateral.amount - amt);
@@ -306,25 +312,27 @@ contract SecuredLoan {
         // pay gas for borrower
         function riseupByAdmin(
                 uint lid,
-                address payable repayer,
+                uint256 amount,
                 bytes32 offchain
         )
                 public
                 onlyAdmin
         {
+                Loan storage l = loans[lid];
 
-                _riseup(lid, repayer, offchain);
+                _riseup(lid, l.borrower, amount, false, offchain);
         }
 
         
         // if a borrower wants to call the contract directly
         function riseup(
                 uint lid,
+                uint256 amount,
                 bytes32 offchain
         )
                 public
         {
-                _riseup(lid, msg.sender, offchain);
+                _riseup(lid, msg.sender, amount, true, offchain);
         }
 
 
@@ -335,26 +343,30 @@ contract SecuredLoan {
         function _riseup(
                 uint lid,
                 address payable repayer,
+                uint256 amount,
+                bool onchain,
                 bytes32 offchain
         )
                 private
         {
                 Loan storage l = loans[lid];
-                bool legendary = (policy.current("ethLegendary") + 10000) * l.collateral.ethPrice <= oracle.current("ethPrice") * 10000;
+                bool legendary = false;
+                uint256 extraAmt =  amount;
+                if (onchain) {
+                        legendary = (policy.current("ethLegendary") + 10000) * l.collateral.ethPrice <= oracle.current("ethPrice") * 10000;
+                        uint amt = l.collateral.amount * oracle.current("ethPrice") / l.collateral.ethPrice;
+                        extraAmt = amt - l.collateral.amount;
+                }else{
+                        legendary = true;
+                }
+                require(!l.done && l.borrower == repayer && amount>0 && legendary && extraAmt >=amount);
 
-                require(!l.done && l.borrower == repayer && legendary);
-
-
-                uint256 amt = l.collateral.amount * oracle.current("ethPrice") / l.collateral.ethPrice;
-                uint256 extraAmt = amt - l.collateral.amount;
-
-                repayer.transfer(extraAmt);
-                l.collateral.amount = l.collateral.amount - extraAmt;
+                repayer.transfer(amount);
+                l.collateral.amount = l.collateral.amount - amount;
                 l.collateral.ethPrice = oracle.current("ethPrice");
+                stake = stake - amount;
 
-                stake = stake - extraAmt;
-
-                emit __riseup(lid, extraAmt, offchain);
+                emit __riseup(lid, amount, offchain);
         }
 
 
