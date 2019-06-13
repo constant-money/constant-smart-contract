@@ -339,7 +339,6 @@ contract SecuredLoan {
                 require(!l.done && l.borrower == repayer && amount>0 && l.collateral.amount > amount);
                 repayer.transfer(amount);
                 l.collateral.amount = l.collateral.amount - amount;
-                l.collateral.ethPrice = oracle.current("ethPrice");
                 stake = stake - amount;
 
                 emit __riseup(lid, amount, stake, offchain);
