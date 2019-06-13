@@ -52,7 +52,7 @@ contract SecuredLoan {
         event __fill(uint lid, bytes32 offchain);
         event __repay(uint lid, uint256 collateral, bool done, bytes32 offchain);
         event __liquidate(uint lid, bytes32 offchain);
-        event __riseup(uint lid, uint256 amt, bytes32 offchain);
+        event __riseup(uint lid, uint256 amount, uint256 stake, bytes32 offchain);
 
         event __withdraw(bytes32 offchain);
         event __payoff(uint lid, uint fee, bytes32 offchain);
@@ -122,8 +122,8 @@ contract SecuredLoan {
                 require(term <= o.term, "term not match");
                 require(collateral <= o.collateral, "collateral not match");
 
-                o.amount -= principal;
-                o.collateral -= collateral;
+                o.amount = o.amount - principal;
+                o.collateral = o.collateral - collateral;
 
                 // add a new matched loan
                 Loan memory l;
@@ -154,8 +154,8 @@ contract SecuredLoan {
         {
                 Loan storage l = loans[lid];
                 require(!l.done && now <= l.end && l.collateral.amount > 0 && amount > 0 && (address(this).balance - stake) >= amount && address(this).balance > 0, "cannot topupCollateral");
-                l.collateral.amount += amount;
-                stake += amount;
+                l.collateral.amount = l.collateral.amount + amount;
+                stake = stake + amount;
 
                 emit __topupCollateral(lid, l.collateral.amount,stake, offchain);
         }
@@ -320,21 +320,8 @@ contract SecuredLoan {
         {
                 Loan storage l = loans[lid];
 
-                _riseup(lid, l.borrower, amount, false, offchain);
+                _riseup(lid, l.borrower, amount, offchain);
         }
-
-        
-        // if a borrower wants to call the contract directly
-        function riseup(
-                uint lid,
-                uint256 amount,
-                bytes32 offchain
-        )
-                public
-        {
-                _riseup(lid, msg.sender, amount, true, offchain);
-        }
-
 
         // repay a secured loan.
         // 3. collateral current rise up to legendary
@@ -344,29 +331,18 @@ contract SecuredLoan {
                 uint lid,
                 address payable repayer,
                 uint256 amount,
-                bool onchain,
                 bytes32 offchain
         )
                 private
         {
                 Loan storage l = loans[lid];
-                bool legendary = false;
-                uint256 extraAmt =  amount;
-                if (onchain) {
-                        legendary = (policy.current("ethLegendary") + 10000) * l.collateral.ethPrice <= oracle.current("ethPrice") * 10000;
-                        uint amt = l.collateral.amount * oracle.current("ethPrice") / l.collateral.ethPrice;
-                        extraAmt = amt - l.collateral.amount;
-                }else{
-                        legendary = true;
-                }
-                require(!l.done && l.borrower == repayer && amount>0 && legendary && extraAmt >=amount);
-
+                require(!l.done && l.borrower == repayer && amount>0 && l.collateral.amount > amount);
                 repayer.transfer(amount);
                 l.collateral.amount = l.collateral.amount - amount;
                 l.collateral.ethPrice = oracle.current("ethPrice");
                 stake = stake - amount;
 
-                emit __riseup(lid, amount, offchain);
+                emit __riseup(lid, amount, stake, offchain);
         }
 
 

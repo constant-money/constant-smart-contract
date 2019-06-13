@@ -746,6 +746,22 @@ contract("SecuredLoan", (accounts) => {
 
         describe('topup to open loan', () => {
 
+                before(async () => {
+                        const i = {
+                                deposit: web3.utils.toWei('1', 'ether'),
+                                borrower: borrower3,
+                        }
+
+                        const o = {
+                                balance: web3.utils.toWei('1.49', 'ether'), // 0.1 borrower1 + 0.1 borrower2
+                        }
+
+                        await sl.send(i.deposit, {from: i.borrower});
+                        const balance = await web3.eth.getBalance(sl.address);
+                        
+                        eq(o.balance, balance);
+                })
+
                 it('borrower 3 create & topup to loan', async() => {
                         const i = {
                                 borrower: borrower3,
@@ -791,6 +807,89 @@ contract("SecuredLoan", (accounts) => {
                         const tx1 = await sl.topupCollateralByAdmin(l.lid, fill.collateral, OFFCHAIN, {from: i.admin});
                         eq(l.lid, await oc(tx1, "__topupCollateral", "lid"));
                         console.log(parseFloat(web3.utils.fromWei((await oc(tx1, "__topupCollateral", "stake")))));
+
+                })
+
+                it('add all riseup', async() => {
+                        const i = {
+                                borrower: borrower3,
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                amount: 1000, // 10US
+                                admin: root,
+                                collateral: web3.utils.toWei('0.1', 'ether'), 
+                                oid: 4,
+                        }
+
+                        const fill = {
+                                oid: 3,
+                                lender: c.address,
+                                principal: 100, // 1US
+                                collateral: web3.utils.toWei('0.05', 'ether'),
+                                amount: web3.utils.toWei('0.01', 'ether'),
+                                term: 2678400,
+                                rate: 1000, // 10%
+                                onchain: false,
+                                admin: root,
+                                lid: 5,
+                        }
+
+                        await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
+                        const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
+                        eq(i.oid, await oc(tx, "__borrow", "oid"));
+
+                        const balance = await web3.eth.getBalance(sl.address);
+
+                        const txf = await sl.fill(fill.oid, fill.lender, fill.principal, fill.collateral, fill.term, fill.rate, fill.onchain, OFFCHAIN, {from: i.admin});
+                        eq(fill.lid, await oc(txf, '__fill', 'lid'));
+
+                       
+                })
+
+                it('admin call riseup', async () => {
+                        const oi = {
+                                key: web3.utils.fromAscii('ethPrice'),
+                                currentETHPrice: 19600, // 196.00 US
+                                value: 58684, // 586.84 US
+                                oracle: oracle1,
+                                amount: web3.utils.toWei('0.01', 'ether'),
+                                bigAmount: web3.utils.toWei('0.055', 'ether'),
+                                lid: 5,
+                                borrower: borrower3,
+                                admin: root,
+                        }
+                        let txr = await sl.riseupByAdmin(oi.lid, oi.amount, OFFCHAIN, {from: oi.admin});
+                        eq(oi.amount, await oc(txr, '__riseup', 'amount'));
+
+                        /*let txo = await or.current(oi.key, {from: oi.oracle});
+                        eq(oi.currentETHPrice, txo.toNumber());
+                        //price hasn't riseup yet
+                        await u.assertRevert(sl.riseup(oi.lid, oi.amount, OFFCHAIN, {from: oi.borrower}));
+
+                        const txoo = await or.current(oi.key, {from: oi.oracle});
+                        console.log('--------------------------------'+txoo.toNumber());
+        
+                        await or.feed(oi.key, oi.value, OFFCHAIN, {from: oi.oracle});
+
+                        txo = await or.current(oi.key, {from: oi.oracle});
+                        eq( txo.toNumber(), oi.value);
+                        //price riseup
+                        
+                        let txrr = await sl.riseup(oi.lid, oi.amount, OFFCHAIN, {from: oi.borrower});
+                        eq(oi.amount, await oc(txrr, '__riseup', 'amount'));
+                        const balAfter =  await web3.eth.getBalance(oi.borrower);
+
+                        //console.log("----------------------"+balBefore+'------------balAfter:'+balAfter)
+                        //eq(balBefore+oi.amount, balAfter);
+                        await u.assertRevert(sl.riseup(oi.lid, oi.bigAmount, OFFCHAIN, {from: oi.borrower}));
+                        */
+                        //topup
+                        const tx1 = await sl.topupCollateralByAdmin(oi.lid, oi.bigAmount, OFFCHAIN, {from: oi.admin});
+                        const balBefore = await web3.eth.getBalance(oi.borrower);
+                        txr = await sl.riseupByAdmin(oi.lid, oi.bigAmount, OFFCHAIN, {from: oi.admin});
+                        const balAfter =  await web3.eth.getBalance(oi.borrower);
+                        console.log("----------------------"+balBefore+'------------balAfter:'+balAfter)
+                        eq(balAfter - balBefore, oi.bigAmount);
 
                 })
 
