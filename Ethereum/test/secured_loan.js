@@ -379,7 +379,7 @@ contract("SecuredLoan", (accounts) => {
                         const o = {
                                 oid: 0,
                         }
-
+                        console.log("++++++++++i.collateral:"+i.collateral);
                         await u.assertRevert(sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.borrower}));
                         const tx = await sl.borrow(i.borrower, i.term, i.rate, i.collateral, i.amount, OFFCHAIN, {from: i.admin});
                         eq(o.oid, await oc(tx, "__borrow", "oid"));

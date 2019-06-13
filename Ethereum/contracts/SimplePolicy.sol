@@ -10,7 +10,7 @@ contract SimplePolicy is Admin {
 
         constructor() public {
                 currents["ethLTV"] = 6666; // 66.66%
-                currents["ethLiquidation"] = 1000; // 10.00%
+                currents["ethLiquidation"] = 1500; // 10.00%
                 currents["ethIncentive"] = 300; // 3.00%
                 currents["ethLegendary"] = 1500; // 15.00%
                 currents["ethPayOffThreshold"] = 7500; // 75.00%

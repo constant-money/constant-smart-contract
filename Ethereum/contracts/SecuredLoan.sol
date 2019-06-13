@@ -296,10 +296,9 @@ contract SecuredLoan {
         {
 
                 Loan storage l = loans[lid];
-                bool liquidated = oracle.current("ethPrice") * 10000 <= l.collateral.ethPrice * (10000 - policy.current("ethLiquidation"));
+                bool liquidated = oracle.current("ethPrice") * 10000 <= l.collateral.ethPrice * (10000 + policy.current("ethLiquidation"));
 
                 require(!l.done && liquidated);
-
                 l.done = true;
 
                 repayer.transfer(l.collateral.amount);
