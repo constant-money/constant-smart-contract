@@ -24,7 +24,7 @@ public:
         string s = "CONST";
         symbol sym = symbol(s.c_str(), 2);
         asset maximum_supply = asset(0, sym);
-        
+
         stats statstable(code, sym.code().raw());
         auto existing = statstable.find(sym.code().raw());
         if (existing == statstable.end()) {
@@ -32,8 +32,8 @@ public:
                 s.supply.symbol = maximum_supply.symbol;
                 s.max_supply = maximum_supply;
                 s.issuer = code;
-            });        
-        } 
+            });
+        }
     }
 
     [[eosio::action]]

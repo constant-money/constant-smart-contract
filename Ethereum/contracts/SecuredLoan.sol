@@ -6,7 +6,7 @@ import './IOracle.sol';
 import 'openzeppelin-solidity/contracts/token/ERC20/IERC20.sol';
 
 // a factory contract of all secured loans on the constant p2p lending platform
-contract SecuredLoan { 
+contract SecuredLoan {
 
         struct Loan {
                 address payable borrower;
@@ -75,13 +75,13 @@ contract SecuredLoan {
         // take a secured loan with ETH as collateral
         function borrow(
                 address borrower,
-                uint term, 
-                uint rate, 
+                uint term,
+                uint rate,
                 uint256 collateral,
                 uint256 amount,
                 bytes32 offchain
-        ) 
-                public 
+        )
+                public
                 onlyAdmin
         {
 
@@ -96,22 +96,22 @@ contract SecuredLoan {
                 opens.push(o);
                 stake = stake + collateral;
 
-                emit __borrow(opens.length - 1, offchain); 
+                emit __borrow(opens.length - 1, offchain);
         }
 
-        
+
         // match an order
         function fill(
                 uint oid,
                 address lender,
                 uint256 principal,//match amount
                 uint256 collateral,
-                uint term, 
-                uint rate, 
+                uint term,
+                uint rate,
                 bool onchain,
                 bytes32 offchain
-        )       
-                public 
+        )
+                public
                 onlyAdmin
         {
                 // processing order
@@ -138,9 +138,9 @@ contract SecuredLoan {
                 loans.push(l);
 
                 // transfer money
-                if (onchain) CONST.transferFrom(lender, o.borrower, l.principal); 
+                if (onchain) CONST.transferFrom(lender, o.borrower, l.principal);
 
-                emit __fill(loans.length - 1, offchain); 
+                emit __fill(loans.length - 1, offchain);
         }
 
         // admin pay gas for user
@@ -176,8 +176,8 @@ contract SecuredLoan {
         function cancel(
                 uint oid,
                 bytes32 offchain
-        )       
-                public 
+        )
+                public
         {
                 _cancel(oid, msg.sender, offchain);
         }
@@ -195,8 +195,8 @@ contract SecuredLoan {
                 require(!o.done && o.collateral > 0);
 
                 o.done = true;
-                address(uint160(o.borrower)).transfer(o.collateral);
-                stake = stake - o.collateral;
+                //address(uint160(o.borrower)).transfer(o.collateral);
+                //stake = stake - o.collateral;
                 o.collateral = 0;
 
                 emit __cancel(oid, offchain);
@@ -243,7 +243,7 @@ contract SecuredLoan {
 
         // repay a secured loan. there are 3 ways:
         // 1. borrower defaults (then anyone can repay and get the over-collateral)
-        // 
+        //
         // note that the repayer must approve the contract to spend its Const first.
         function _repay(
                 address payable repayer,
@@ -297,7 +297,7 @@ contract SecuredLoan {
 
                 Loan storage l = loans[lid];
                 bool liquidated = oracle.current("ethPrice") * 10000 <= l.collateral.ethPrice * (10000 + policy.current("ethLiquidation"));
-
+                //l.rate*l.principal/l.collateral.amount
                 require(!l.done && liquidated);
                 l.done = true;
 
@@ -350,7 +350,7 @@ contract SecuredLoan {
                 address payable borrower,
                 bool onchain,
                 bytes32 offchain
-        ) 
+        )
                 public
                 onlyAdmin
         {
@@ -370,7 +370,7 @@ contract SecuredLoan {
 
 
         // borrower repays early
-        // 
+        //
         // note that the borrower must approve the contract to spend its Const first.
         function _payoff(
                 uint lid,

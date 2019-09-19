@@ -1,7 +1,7 @@
 pragma solidity ^0.5;
 
-import 'https://github.com/constant-money/constant-smart-contract/Ethereum/contracts/Admin.sol';
-import 'https://github.com/OpenZeppelin/openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
+import './Admin.sol';
+import 'openzeppelin-solidity/contracts/token/ERC20/ERC20.sol';
 
 contract Constant is ERC20, Admin {
 
